@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
+import ConfigParser
+config = ConfigParser.ConfigParser()
+config.read("config")
+db_id = config.get('db', 'db_id')
+db_password = config.get('db', 'db_password')
+db_name = config.get('db', 'db_name')
+app_secret_key = config.get('app', 'app_secret_key')
+
 import hashlib
 from datetime import datetime
 from flask import Flask, render_template, request, flash, url_for, redirect, make_response, current_app
@@ -10,15 +18,8 @@ from flask.ext.login import (LoginManager, current_user, login_required,
                             confirm_login, fresh_login_required)
 
 app = Flask(__name__)
-app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LW3/,?RT'
+app.secret_key = app_secret_key
 app.config.from_object(__name__)
-
-import ConfigParser
-config = ConfigParser.ConfigParser()
-config.read("config")
-db_id = config.get('db', 'db_id')
-db_password = config.get('db', 'db_password')
-db_name = config.get('db', 'db_name')
 
 class Anonymous(AnonymousUser):
     nick_name = u"anonymous"
