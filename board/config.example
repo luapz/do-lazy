@@ -1,0 +1,7 @@
+# first, 
+# rename 'config.example' to 'config'
+
+[db]
+db_id = root
+db_password = ghswktj84
+db_name = d2
