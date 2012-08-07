@@ -2,16 +2,12 @@
 # -*- coding:utf-8 -*-
 
 import ConfigParser
-
 config = ConfigParser.ConfigParser()
 config.read("config")
 db_id = config.get('db', 'db_id')
 db_password = config.get('db', 'db_password')
 db_name = config.get('db', 'db_name')
 app_secret_key = config.get('app', 'app_secret_key')
-debug_mode = config.get('app', 'debug_mode')
-per_page = config.get('app', 'per_page')
-page_number = 1
 
 import hashlib
 from datetime import datetime
@@ -44,7 +40,7 @@ def load_user(userid):
     else:
         return None
 
-from sqlalchemy import create_engine, MetaData, Column, Integer, String, UnicodeText, ForeignKey, desc, func
+from sqlalchemy import create_engine, MetaData, Column, Integer, String, UnicodeText, ForeignKey, desc
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import mapper, sessionmaker, relationship, backref
@@ -222,46 +218,6 @@ def mobile_check(request):
     else:
         return False
 
-from math import ceil
-
-class Pagination(object):
-    def __init__(self, page_number, per_page, total_count):
-        self.page_number = page_number
-        self.per_page = per_page
-        self.total_count = total_count
-
-    @property
-    def pages(self):
-        return int(ceil(self.total_count / float(self.per_page)))
-
-    @property
-    def has_prev(self):
-        return self.page_number > 1
-
-    @property
-    def has_next(self):
-        return self.page_number < self.pages
-
-    def iter_pages(self, left_edge=2, left_current=2,
-                   right_current=5, right_edge=2):
-        last = 0
-        for num in xrange(1, self.pages + 1):
-            if num <= left_edge or \
-               (num > self.page_number - left_current - 1 and \
-                num < self.page_number + right_current) or \
-               num > self.pages - right_edge:
-                if last + 1 != num:
-                    yield None
-                yield num
-                last = num
-
-def url_for_other_page(page):
-    args = request.view_args.copy()
-    args['page_number'] = page_number
-    return url_for(request.endpoint, **args)
-app.jinja_env.globals['url_for_other_page'] = url_for_other_page
-
-
 
 class registration_form(Form):
     user_name = TextField('id', [validators.Length(min=4, max=20)])
@@ -401,13 +357,15 @@ def write_article():
 @app.route("/board/<board_name>/page/<int:page_number>", defaults={'page_number': 1})
 @app.route("/board/<board_name>/page/<int:page_number>/", defaults={'page_number': 1})
 def board_view(board_name, page_number=1):
-    page_number = page_number
+    per_page = int(page_number) * 2
     board = session.query(Board).filter_by(board_name = board_name).first()
     article_list = session.query(Article).filter_by(board_id=board.board_id).order_by(desc(Article.id)).limit(per_page)
-    whole_article_number = board.article_number
-    pagination = Pagination(page_number, per_page, whole_article_number)
+    if article_list is None:
+        return unicode("none") 
+#        return render_template("board.html", article_list=article_list, site_info=site_info, board=board, number_list=number_list)
+    context = {"article_list": "article_list", "site_info": "site_info", "board": "board"}
     number_list = board.article_number
-    return render_template("board.html", article_list=article_list, site_info=site_info, board=board, number_list=number_list, pagination=pagination, page_number=page_number, per_page=per_page, whole_article_number=whole_article_number )
+    return render_template("board.html", article_list=article_list, site_info=site_info, board=board, number_list=number_list)
 
 @app.route("/board/<board_name>/write", methods=["GET", "POST"], defaults={'page_number': 1})
 def board_write(board_name, page_number=1):
@@ -464,58 +422,6 @@ def rss_view():
     article_list = session.query(Article).order_by(Article.id).limit(10)
     return render_template("rss.xml", last_article=last_article, article_list=article_list, site_info=site_info) 
 
-@app.route("/insert")
-def write_article():
-    for i in range(1,40):
-        b_name = 1
-        board_id = 1
-        i = str(i)
-        user_name = "user_name" + i
-        nick_name = "nick_name" + i
-        password = "password" + i
-        anonymity = False
-        title = "title " + i
-        text = "text" + i
-        creat_date = datetime.now()
-        modified_date = datetime.now()
-        is_notice = False
-        is_public = True
-        is_mobile = mobile_check(request)
-        remote_addr = request.remote_addr
-        article = Article(board_id, user_name, nick_name, password, title, text, creat_date, modified_date, is_notice, is_public, is_mobile, anonymity, remote_addr)
-        session.add(article)
-        try:
-            session.commit()
-        except:
-            session.rollback()
-    return unicode("inserted")
-
-    '''
-    form = write_article_form(request.form)
-    if request.method == 'POST':
-        if current_user.nick_name == "anonymous":
-            user_name = Anonymous.nick_name
-            nick_name = form.nick_name.data
-            password = string_to_sha256(string_to_md5(form.password.data+user_name))
-        else:
-            user_name = current_user.user_name
-            nick_name = current_user.nick_name
-            password = current_user.password
-        text = form.redactor.data
-        creat_date = datetime.now()
-        modified_date = datetime.now()
-        is_public = True
-        remote_addr = request.remote_addr
-        article = Article(user_name, nick_name, password, text, creat_date, modified_date, is_public, remote_addr)
-        session.add(article)
-        try:
-            session.commit()
-        except:
-            session.rollback()
-        flash('article write')
-        return redirect(url_for('index'))
-    return render_template("write_article.html", form=form, site_info=site_info) 
-    '''
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=debug_mode)
+    app.run(host="0.0.0.0", debug=True)
