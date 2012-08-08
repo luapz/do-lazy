@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block body %}
+{% from "_formhelpers.html" import render_field %}
+<link rel="stylesheet" href="{{ url_for('static', filename='redactor/css/redactor.css') }}" />
+<script type="text/javascript" src="{{ url_for('static', filename='lib/jquery-1.7.min.js') }}" ></script>
+<script type="text/javascript" src="{{ url_for('static', filename='lib/redactor.js') }}" ></script>
+<script type="text/javascript" src="{{ url_for('static', filename='redactor/redactor.js') }}" ></script>
+
+{%from "_formhelpers.html" import render_field %}
+<form method=post action="/board/{{ board_name }}/write">
+{% if not current_user.is_authenticated() %}
+{{ render_field(form.nick_name) }}
+{{ render_field(form.password) }}
+{{ render_field(form.title) }}
+{% endif %}
+{{ form.redactor(rows=20,cols=30) | safe }}
+
+  <p><input type=submit value="write">
+</form>
+
+{% endblock %}

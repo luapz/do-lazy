@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<div id="login">
+<h2>Login</h2>
+    <table>
+        <form action="" method=post>
+        <tr>
+            <td>
+                <label for="username">username:</label>
+            </td>
+            <td>
+                    <input type="text" name="username" id="username">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label for="password">password:</label>
+            </td>
+            <td>
+                    <input type="password" name="password">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Remember Me:
+                    <input type="checkbox" name="remember" value="yes">
+                </label>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input type="submit" value="Login">
+            </td>
+        </tr>
+        </form>
+    </table>
+</div> <!-- login div end -->
+{% endblock %}

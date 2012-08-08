@@ -1,0 +1,6 @@
+*.swp
+*.pyc
+config
+.DS_Store
+*.swm
+*.swn
