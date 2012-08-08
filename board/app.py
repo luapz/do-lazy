@@ -11,7 +11,7 @@ db_name = config.get('db', 'db_name')
 app_secret_key = config.get('app', 'app_secret_key')
 debug_mode = config.get('app', 'debug_mode')
 per_page = config.get('app', 'per_page')
-page_number = 1
+port = config.get('app', 'port')
 
 import hashlib
 from datetime import datetime
@@ -57,21 +57,21 @@ sql_datetime = DateTime
 
 
 class SiteInfo(Base):
-    __tablename__ = "siteinfo"
+    __tablename__ = "site-info"
     id = Column(Integer, primary_key=True)
     site_title = Column(String(length=50), nullable = False)
     site_slogan = Column(String(length=200), nullable = False)
     site_desc = Column(String(length=200), nullable = False)
     site_root = Column(String(length=50), nullable = False)
 
-    def __init__(self, site_title, site_desc, site_root):
+    def __init__(self, site_title, site_slogan, site_desc, site_root):
         self.site_title = site_title
         self.site_slogan = site_slogan
         self.site_desc = site_desc
         self.site_root = site_root
 
 class SiteMenu(Base):
-    __tablename__ = "sitemenu"
+    __tablename__ = "site-menu"
     id = Column(Integer, primary_key=True)
     menu_title = Column(String(length=50), nullable = False)
     menu_link = Column(String(length=50), nullable = False)
@@ -118,7 +118,7 @@ class Board(Base):
     board_id = Column(String(length=20), nullable = False)
     board_name = Column(String(length=20), nullable = False)
     board_desc = Column(String(length=80), nullable = False)
-    article_number = Column(Integer)
+    public_article_number = Column(Integer)
 
     def __init__(self, board_id, board_name, board_desc, public_article_number):
         self.board_id = board_id
@@ -404,9 +404,9 @@ def board_view(board_name, page_number=1):
     page_number = page_number
     board = session.query(Board).filter_by(board_name = board_name).first()
     article_list = session.query(Article).filter_by(board_id=board.board_id).order_by(desc(Article.id)).limit(per_page)
-    whole_article_number = board.article_number
+    whole_article_number = board.public_article_number
     pagination = Pagination(page_number, per_page, whole_article_number)
-    number_list = board.article_number
+    number_list = board.public_article_number
     return render_template("board.html", article_list=article_list, site_info=site_info, board=board, number_list=number_list, pagination=pagination, page_number=page_number, per_page=per_page, whole_article_number=whole_article_number )
 
 @app.route("/board/<board_name>/write", methods=["GET", "POST"], defaults={'page_number': 1})
@@ -464,8 +464,30 @@ def rss_view():
     article_list = session.query(Article).order_by(Article.id).limit(10)
     return render_template("rss.xml", last_article=last_article, article_list=article_list, site_info=site_info) 
 
-@app.route("/insert")
+@app.route("/i")
 def write_article():
+    site_title = "dolazy"
+    site_slogan = "아스카와 나의 신혼방"
+    site_desc = "힘겨운 삶의 진통제"
+    site_root = "http://dolazy.com/d2"
+    siteinfo = SiteInfo(site_title, site_slogan, site_desc, site_root)
+    session.add(siteinfo)
+    try:
+        session.commit()
+    except:
+        session.rollback()
+
+    board_id = 1
+    board_name = "신혼방"
+    board_desc = "찌질거리는 이를 까지 말라"
+    public_article_number = 0
+    board = Board(board_id, board_name, board_desc, public_article_number)
+    session.add(board)
+    try:
+        session.commit()
+    except:
+        session.rollback()
+
     for i in range(1,40):
         b_name = 1
         board_id = 1
@@ -518,4 +540,4 @@ def write_article():
     '''
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=debug_mode)
+    app.run(host="0.0.0.0", debug=debug_mode, port=5001)
