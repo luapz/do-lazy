@@ -45,3 +45,53 @@ a:hover {
         color: blue;
 }
 
+#container {
+    width: 1095px;
+    margin-left: 5px;
+    padding-top: 15px;
+}
+
+#header {
+    width: 150px;
+    float: left;
+}
+
+#header h1 {
+    font-size: 2em;
+}
+
+#header h3 {
+    font-size: 0.8em;
+}
+
+ul#auth {
+    clear: both;
+}
+
+ul#auth li {
+    display: block;
+    margin-right: 15px;
+    float: left;
+}
+
+#contents {
+    width: 700px;
+    float: left;
+}
+
+.inner_header {
+    margin-bottom: 5px;
+}
+
+.inner_header h1 {
+    font-size: 1.5em;
+}
+
+#loginform {
+    margin-left: 35px;
+}
+
+#sidebar {
+    width: 245px;
+    float: right;
+}

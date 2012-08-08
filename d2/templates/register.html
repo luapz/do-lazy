@@ -1,8 +1,11 @@
 {% extends "layout.html" %}
 
 {% block body %}
+<div class="inner_header">
+    <h1>signup</h1>
+</div> <!-- div inner_header end -->
 {% from "_formhelpers.html" import render_field %}
-<form method=post action="/register/add">
+<form method=post action="/register/add" id="loginform">
   <dl>
     {{ render_field(form.user_name) }}
     {{ render_field(form.nick_name) }}

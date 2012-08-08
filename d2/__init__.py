@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
+import os
+template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
+
+
 import ConfigParser
 
 config = ConfigParser.ConfigParser()
@@ -21,7 +25,7 @@ from flask.ext.login import (LoginManager, current_user, login_required,
                             login_user, logout_user, UserMixin, AnonymousUser,
                             confirm_login, fresh_login_required)
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=template_dir)
 app.secret_key = app_secret_key
 app.config.from_object(__name__)
 
@@ -94,7 +98,9 @@ class User(Base, UserMixin):
     icon_url = Column(String(length=256), nullable = True)
     trophy = Column(String(length=200), nullable = True)
 
-    def __init__(self, user_name, nick_name, email, password, creat_date=None, login_date=None, access_date=None, signature=None, icon_url=None, trophy=None):
+    def __init__(self, user_name, nick_name, email, password, 
+                creat_date=None, login_date=None, access_date=None, 
+                signature=None, icon_url=None, trophy=None):
         self.user_name = user_name
         self.nick_name = nick_name
         self.email = email
@@ -146,7 +152,10 @@ class Article(Base):
     thumbs_down = Column(String(length=5), nullable = True)
     hits = Column(Integer)
 
-    def __init__(self, board_id, user_name, nick_name, password, title, text, creat_date, modified_date, is_notice, is_public, is_mobile, anonymity, remote_addr, thumbs_up=0, thumbs_down=0, hits=0):
+    def __init__(self, board_id, user_name, nick_name, password, 
+                title, text, creat_date, modified_date, is_notice, 
+                is_public, is_mobile, anonymity, remote_addr, 
+                thumbs_up=0, thumbs_down=0, hits=0):
         self.board_id = board_id
         self.user_name = user_name
         self.nick_name = nick_name
@@ -206,12 +215,12 @@ session.begin_nested()
 
 Base.metadata.create_all(engine) 
 
-def string_to_md5(content):
+def encode_md5(content):
     md5 = hashlib.md5()
     md5.update(content)
     return md5.hexdigest()
 
-def string_to_sha256(content):
+def encode_sha256(content):
     sha256 = hashlib.sha256()
     sha256.update(content)
     return sha256.hexdigest()
@@ -225,30 +234,26 @@ def mobile_check(request):
 from math import ceil
 
 class Pagination(object):
-    def __init__(self, page_number, per_page, total_count):
-        self.page_number = page_number
+    def __init__(self, page, per_page, total_count):
+        self.page = page
         self.per_page = per_page
         self.total_count = total_count
-
     @property
     def pages(self):
         return int(ceil(self.total_count / float(self.per_page)))
-
     @property
     def has_prev(self):
-        return self.page_number > 1
-
+        return self.page > 1
     @property
     def has_next(self):
-        return self.page_number < self.pages
-
+        return self.page < self.pages
     def iter_pages(self, left_edge=2, left_current=2,
                    right_current=5, right_edge=2):
         last = 0
         for num in xrange(1, self.pages + 1):
             if num <= left_edge or \
-               (num > self.page_number - left_current - 1 and \
-                num < self.page_number + right_current) or \
+               (num > self.page - left_current - 1 and \
+                num < self.page + right_current) or \
                num > self.pages - right_edge:
                 if last + 1 != num:
                     yield None
@@ -257,10 +262,9 @@ class Pagination(object):
 
 def url_for_other_page(page):
     args = request.view_args.copy()
-    args['page_number'] = page_number
+    args['page'] = page
     return url_for(request.endpoint, **args)
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
-
 
 
 class registration_form(Form):
@@ -274,7 +278,8 @@ class registration_form(Form):
     confirm = PasswordField('confirm Password')
 
 class login_form(Form):
-    user_name = TextField('id', [validators.Length(min=4, max=50), validators.Required()])
+    user_name = TextField('id', [validators.Length(min=4, max=50), 
+                                validators.Required()])
     password = PasswordField('Password', [validators.Required()])
     remember = BooleanField('remember')
 
@@ -284,9 +289,11 @@ class profile_form(Form):
     user_name = TextField('id')
 
 class write_article_form(Form):
-    nick_name = TextField('nick name', [validators.Length(max=50), validators.Required()])
+    nick_name = TextField('nick name', [validators.Length(max=50), 
+                                        validators.Required()])
     password = PasswordField('Password', [validators.Required()])
-    title = TextField('title', [validators.Length(max=200), validators.Required()])
+    title = TextField('title', [validators.Length(max=200), 
+                                validators.Required()])
     redactor = TextAreaField('Text', default="")
 
 site_info = session.query(SiteInfo).first()
@@ -295,10 +302,8 @@ site_info = session.query(SiteInfo).first()
 def index():
     site_info = session.query(SiteInfo).first()
     site_menu = session.query(SiteMenu).all()
-#    return render_template('index.html', site_info = site_info, site_menu=site_menu)
-#    a = mobile_check(request)
-    db_name = config.get('db', 'db_name')
-    return unicode(db_name)
+    return render_template('index.html', site_info = site_info, 
+                            site_menu=site_menu)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -310,7 +315,7 @@ def register():
     form = registration_form(request.form)
     if request.method == 'POST' and form.validate():
         creat_date = datetime.now()
-        password = string_to_sha256(string_to_md5(form.password.data+form.user_name.data))
+        password = encode_sha256(encode_md5(form.password.data+form.user_name.data))
         user = User(form.user_name.data, form.nick_name.data, form.email.data,
                     password, creat_date)
         session.add(user)
@@ -330,7 +335,7 @@ def login():
         if user is None:
             return "no id"
         else:
-            input_password = string_to_sha256(string_to_md5(form.password.data+form.user_name.data))
+            input_password = encode_sha256(encode_md5(form.password.data+form.user_name.data))
             if user.password == input_password:
                 user.login_date = datetime.now()                
                 try:
@@ -367,7 +372,8 @@ def article_view(article_number):
         session.commit()
     except:
         session.rollback()
-    return render_template("article.html", article_detail=article_detail, site_info=site_info)
+    return render_template("article.html", article_detail=article_detail, 
+                            site_info=site_info)
 
 @app.route("/article/write", methods=["GET", "POST"])
 def write_article():
@@ -376,7 +382,7 @@ def write_article():
         if current_user.nick_name == "anonymous":
             user_name = Anonymous.nick_name
             nick_name = form.nick_name.data
-            password = string_to_sha256(string_to_md5(form.password.data+user_name))
+            password = encode_sha256(encode_md5(form.password.data+user_name))
         else:
             user_name = current_user.user_name
             nick_name = current_user.nick_name
@@ -386,7 +392,8 @@ def write_article():
         modified_date = datetime.now()
         is_public = True
         remote_addr = request.remote_addr
-        article = Article(user_name, nick_name, password, text, creat_date, modified_date, is_public, remote_addr)
+        article = Article(user_name, nick_name, password, text, creat_date, 
+                            modified_date, is_public, remote_addr)
         session.add(article)
         try:
             session.commit()
@@ -398,18 +405,22 @@ def write_article():
 
 @app.route("/board/<board_name>")
 @app.route("/board/<board_name>/")
-@app.route("/board/<board_name>/page/<int:page_number>", defaults={'page_number': 1})
-@app.route("/board/<board_name>/page/<int:page_number>/", defaults={'page_number': 1})
-def board_view(board_name, page_number=1):
-    page_number = page_number
+@app.route("/board/<board_name>/page/<int:page>", defaults={'page': 1})
+@app.route("/board/<board_name>/page/<int:page>/", defaults={'page': 1})
+def board_view(board_name, page=1):
     board = session.query(Board).filter_by(board_name = board_name).first()
     article_list = session.query(Article).filter_by(board_id=board.board_id).order_by(desc(Article.id)).limit(per_page)
     whole_article_number = board.public_article_number
-    pagination = Pagination(page_number, per_page, whole_article_number)
+    pagination = Pagination(page, per_page, whole_article_number)
     number_list = board.public_article_number
-    return render_template("board.html", article_list=article_list, site_info=site_info, board=board, number_list=number_list, pagination=pagination, page_number=page_number, per_page=per_page, whole_article_number=whole_article_number )
+    return render_template("board.html", article_list=article_list, 
+                            site_info=site_info, board=board, 
+                            number_list=number_list, pagination=pagination, 
+                            page=page, per_page=per_page, 
+                            whole_article_number=whole_article_number )
 
-@app.route("/board/<board_name>/write", methods=["GET", "POST"], defaults={'page_number': 1})
+@app.route("/board/<board_name>/write", methods=["GET", "POST"], 
+            defaults={'page_number': 1})
 def board_write(board_name, page_number=1):
     form = write_article_form(request.form)
     board = session.query(Board).filter_by(board_name = board_name).first()
@@ -419,7 +430,7 @@ def board_write(board_name, page_number=1):
         if current_user.nick_name == "anonymous":
             user_name = Anonymous.nick_name
             nick_name = form.nick_name.data
-            password = string_to_sha256(string_to_md5(form.password.data+user_name))
+            password = encode_sha256(encode_md5(form.password.data+user_name))
             anonymity = True 
         else:
             user_name = current_user.user_name
@@ -434,7 +445,10 @@ def board_write(board_name, page_number=1):
         is_public = True
         is_mobile = mobile_check(request)
         remote_addr = request.remote_addr
-        article = Article(board_id, user_name, nick_name, password, title, text, creat_date, modified_date, is_notice, is_public, is_mobile, anonymity, remote_addr)
+        article = Article(board_id, user_name, nick_name, password, 
+                            title, text, creat_date, modified_date, 
+                            is_notice, is_public, is_mobile, anonymity, 
+                            remote_addr)
         session.add(article)
         try:
             session.commit()
@@ -451,9 +465,8 @@ def board_write(board_name, page_number=1):
         flash('article write')
         b = "/board/%s" % (b_name)
         return redirect(url_for('board_view', board_name=b_name, page_number=1))
-#        return redirect(b)
-
-    return render_template("write_article.html", form=form, site_info=site_info, board_name=board_name) 
+    return render_template("write_article.html", form=form, 
+                            site_info=site_info, board_name=board_name) 
 
 
 
@@ -462,7 +475,8 @@ def board_write(board_name, page_number=1):
 def rss_view():
     last_article = session.query(Article).order_by(desc(Article.id)).first()
     article_list = session.query(Article).order_by(Article.id).limit(10)
-    return render_template("rss.xml", last_article=last_article, article_list=article_list, site_info=site_info) 
+    return render_template("rss.xml", last_article=last_article, 
+                            article_list=article_list, site_info=site_info) 
 
 @app.route("/i")
 def write_article():
@@ -504,40 +518,21 @@ def write_article():
         is_public = True
         is_mobile = mobile_check(request)
         remote_addr = request.remote_addr
-        article = Article(board_id, user_name, nick_name, password, title, text, creat_date, modified_date, is_notice, is_public, is_mobile, anonymity, remote_addr)
+        article = Article(board_id, user_name, nick_name, password, 
+                            title, text, creat_date, modified_date, 
+                            is_notice, is_public, is_mobile, anonymity, 
+                            remote_addr)
         session.add(article)
+        try:
+            session.commit()
+        except:
+            session.rollback()
+        # update public article count number
+        public_article_count = session.query(Article).filter(Article.is_public.like(True)).count() 
+        board.article_number = public_article_count
+        session.add(board)
         try:
             session.commit()
         except:
             session.rollback()
     return unicode("inserted")
-
-    '''
-    form = write_article_form(request.form)
-    if request.method == 'POST':
-        if current_user.nick_name == "anonymous":
-            user_name = Anonymous.nick_name
-            nick_name = form.nick_name.data
-            password = string_to_sha256(string_to_md5(form.password.data+user_name))
-        else:
-            user_name = current_user.user_name
-            nick_name = current_user.nick_name
-            password = current_user.password
-        text = form.redactor.data
-        creat_date = datetime.now()
-        modified_date = datetime.now()
-        is_public = True
-        remote_addr = request.remote_addr
-        article = Article(user_name, nick_name, password, text, creat_date, modified_date, is_public, remote_addr)
-        session.add(article)
-        try:
-            session.commit()
-        except:
-            session.rollback()
-        flash('article write')
-        return redirect(url_for('index'))
-    return render_template("write_article.html", form=form, site_info=site_info) 
-    '''
-
-#if __name__ == '__main__':
-#    app.run(host="0.0.0.0", debug=debug_mode, port=5001)

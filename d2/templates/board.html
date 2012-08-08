@@ -5,7 +5,7 @@
 <table>
     <thead>
         <tr>
-            <th>글번호
+            <th>번호
             <th>제목
             <th>글쓴이
         </tr>
@@ -23,24 +23,28 @@
 </table>
 
 
-
   <div class=pagination>
-  {%- for page_number in pagination.iter_pages() %}
-    {% if page_number %}
-      {% if page_number != pagination.page_number %}
-        <a href="{{ url_for_other_page(page_number) }}">{{ page_number }}</a>
+  {% if pagination.has_prev %}
+        <a href="{{ url_for_other_page(pagination.page - 1) }}">&laquo; Previous</a>
+  {% endif %}
+  {%- for page in pagination.iter_pages() %}
+    {% if page %}
+      {% if page != pagination.page %}
+        <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
       {% else %}
-        <strong>{{ page_number }}</strong>
+        <strong>{{ page }}</strong>
       {% endif %}
     {% else %}
       <span class=ellipsis>…</span>
     {% endif %}
   {%- endfor %}
   {% if pagination.has_next %}
-    <a href="{{ url_for_other_page(pagination.page_number + 1)
-      }}">Next &raquo;</a>
+        <a href="/board/{{ board.board_name }}/page/{{ page + 1 }}">Nexxt </a>
+<!--    <a href="{{ url_for ('board_view', board_name = board.board_name, page = page + 1)
+      }}">Next &raquo;</a> -->
   {% endif %}
   </div>
+
 
 
 <p><a href="{{ url_for ('board_write', board_name = board.board_name) }}">write</a></p> 
