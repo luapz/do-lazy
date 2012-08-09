@@ -28,6 +28,8 @@ from flask.ext.login import (LoginManager, current_user, login_required,
 app = Flask(__name__, template_folder=template_dir)
 app.secret_key = app_secret_key
 app.config.from_object(__name__)
+app.config.update(DEBUG=True)
+
 
 class Anonymous(AnonymousUser):
     nick_name = u"anonymous"
@@ -413,11 +415,13 @@ def board_view(board_name, page=1):
     whole_article_number = board.public_article_number
     pagination = Pagination(page, per_page, whole_article_number)
     number_list = board.public_article_number
+    site_menu = session.query(SiteMenu).all()
     return render_template("board.html", article_list=article_list, 
                             site_info=site_info, board=board, 
                             number_list=number_list, pagination=pagination, 
                             page=page, per_page=per_page, 
-                            whole_article_number=whole_article_number )
+                            whole_article_number=whole_article_number,
+                            site_menu=site_menu)
 
 @app.route("/board/<board_name>/write", methods=["GET", "POST"], 
             defaults={'page_number': 1})

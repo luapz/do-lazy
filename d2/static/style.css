@@ -64,6 +64,10 @@ a:hover {
     font-size: 0.8em;
 }
 
+ul#menu {
+    margin-top: 15px;
+}
+
 ul#auth {
     clear: both;
 }
@@ -91,7 +95,67 @@ ul#auth li {
     margin-left: 35px;
 }
 
+#article_list {
+    font-size: 0.8em;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#article_list > thead {
+    height: 30px;
+    background: url('http://instiznet.jpg1.kr/images/bg_btn_big.png') no-repeat;
+
+}
+
+#article_list > thead > tr {
+    height: 30px;
+}
+
+#article_list > thead > tr > th {
+    font-weight: bold;
+}
+
+#article_list > thead > tr > th > p {
+    margin-top: 5px;
+    height: 15px;
+}
+
+#article_list > thead > tr, #article_list > tbody > tr {
+    border-bottom: 1px #ccc solid;
+}
+
+#article_list > tbody > tr:hover {
+    background-color: #eee;
+}
+
+
+th#number, td#number {
+    width: 50px;
+    text-align: center;
+}
+
+td#number {
+    font-size: 0.9em;
+    color: #444;
+}
+
+th#writer, td#writer {
+    width: 100px;
+    text-align: left;
+    padding-left: 5px;
+}
+
+th#title, td#title {
+    padding-left: 5px;
+}
+
+tr#hits, td#hits {
+    width: 50px;
+    text-align: right;
+}
+
 #sidebar {
-    width: 245px;
+    width: 220px;
+    padding-left: 15px;
     float: right;
 }
