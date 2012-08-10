@@ -14,7 +14,7 @@ db_password = config.get('db', 'db_password')
 db_name = config.get('db', 'db_name')
 app_secret_key = config.get('app', 'app_secret_key')
 debug_mode = config.get('app', 'debug_mode')
-per_page = config.get('app', 'per_page')
+per_page = int(config.get('app', 'per_page'))
 port = config.get('app', 'port')
 
 import hashlib
@@ -96,6 +96,7 @@ class User(Base, UserMixin):
     creat_date = Column(DateTime)
     login_date = Column(DateTime)
     access_date = Column(DateTime)
+    is_confirm = Column(Boolean, nullable=False)
     signature = Column(String(length=1000), nullable = True)
     icon_url = Column(String(length=256), nullable = True)
     trophy = Column(String(length=200), nullable = True)
@@ -126,13 +127,11 @@ class Board(Base):
     board_id = Column(String(length=20), nullable = False)
     board_name = Column(String(length=20), nullable = False)
     board_desc = Column(String(length=80), nullable = False)
-    public_article_number = Column(Integer)
 
-    def __init__(self, board_id, board_name, board_desc, public_article_number):
+    def __init__(self, board_id, board_name, board_desc):
         self.board_id = board_id
         self.board_name = board_name
         self.board_desc = board_desc
-        self.public_article_number = public_article_number
 
 class Article(Base):
     __tablename__ = 'article'
@@ -407,22 +406,29 @@ def write_article():
 
 @app.route("/board/<board_name>")
 @app.route("/board/<board_name>/")
-@app.route("/board/<board_name>/page/<int:page>", defaults={'page': 1})
-@app.route("/board/<board_name>/page/<int:page>/", defaults={'page': 1})
-def board_view(board_name, page=1):
+def board(board_name, page=1):
+    return redirect(url_for('board_view', board_name=board_name, page=page))
+#@app.route("/board/<board_name>/page/<page>", defaults={'page': 1})
+#@app.route("/board/<board_name>/page/<page>/", defaults={'page': 1})
+@app.route("/board/<board_name>/page/<int:page>")
+@app.route("/board/<board_name>/page/<int:page>/")
+def board_view(board_name,page):
+    page = page - 1
     board = session.query(Board).filter_by(board_name = board_name).first()
-    article_list = session.query(Article).filter_by(board_id=board.board_id).order_by(desc(Article.id)).limit(per_page)
-    whole_article_number = board.public_article_number
-    pagination = Pagination(page, per_page, whole_article_number)
-    number_list = board.public_article_number
+    lastest_article_number = int(session.query(Article).filter(Article.board_id==1).filter(Article.is_public==True).count())
+    total_article_number = int(session.query(Article).filter(Article.board_id==1).filter(Article.is_public==True).count()) - (page * per_page)
+    article_from = int(page) * int(per_page)
+    article_to = (int(page) + 1) * int(per_page)
+    article_list = session.query(Article).filter(Article.board_id==1).order_by(desc(Article.id)).filter(Article.is_public==True)[article_from:article_to]
+    pagination = Pagination(page, per_page, lastest_article_number)
     site_menu = session.query(SiteMenu).all()
     return render_template("board.html", article_list=article_list, 
                             site_info=site_info, board=board, 
-                            number_list=number_list, pagination=pagination, 
-                            page=page, per_page=per_page, 
-                            whole_article_number=whole_article_number,
+                            page=page, per_page=per_page,
+                            pagination=pagination,
+                            lastest_article_number=lastest_article_number,
+                            total_article_number=total_article_number,
                             site_menu=site_menu)
-
 @app.route("/board/<board_name>/write", methods=["GET", "POST"], 
             defaults={'page_number': 1})
 def board_write(board_name, page_number=1):
@@ -487,7 +493,7 @@ def write_article():
     site_title = "dolazy"
     site_slogan = "아스카와 나의 신혼방"
     site_desc = "힘겨운 삶의 진통제"
-    site_root = "http://dolazy.com/d2"
+    site_root = "http://rkrk.kr:5001/"
     siteinfo = SiteInfo(site_title, site_slogan, site_desc, site_root)
     session.add(siteinfo)
     try:
@@ -498,9 +504,17 @@ def write_article():
     board_id = 1
     board_name = "신혼방"
     board_desc = "찌질거리는 이를 까지 말라"
-    public_article_number = 0
-    board = Board(board_id, board_name, board_desc, public_article_number)
+    board = Board(board_id, board_name, board_desc)
     session.add(board)
+    try:
+        session.commit()
+    except:
+        session.rollback()
+
+    menu_title = "신혼방"
+    menu_link = "board/신혼방"
+    menu = SiteMenu(menu_title, menu_link)
+    session.add(menu)
     try:
         session.commit()
     except:
@@ -527,14 +541,6 @@ def write_article():
                             is_notice, is_public, is_mobile, anonymity, 
                             remote_addr)
         session.add(article)
-        try:
-            session.commit()
-        except:
-            session.rollback()
-        # update public article count number
-        public_article_count = session.query(Article).filter(Article.is_public.like(True)).count() 
-        board.article_number = public_article_count
-        session.add(board)
         try:
             session.commit()
         except:
