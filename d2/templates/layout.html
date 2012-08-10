@@ -4,13 +4,14 @@
 <meta charset="UTF-8">
 <title>{{ site_info.site_slogan }}</title>
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bootstrap/css/bootstrap.css') }}">
 </head>
 <body>
 <div id="container">
     <div id="header">
-        <a href="{{ site_info.site_root }}">
-            <h1>{{ site_info.site_title }}</h1>
-            <h3>{{ site_info.site_desc }}</h3>
+        <a href="{{ site_info.site_root }}" class="none-decoration">
+            <h1 id="site_title">{{ site_info.site_title }}</h1>
+            <p id="site_desc">{{ site_info.site_desc }}</p>
         </a>
         <ul id="menu">
             {% for i in site_menu %}
