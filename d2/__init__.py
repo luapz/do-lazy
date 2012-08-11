@@ -24,11 +24,16 @@ from wtforms import Form, BooleanField, TextField, PasswordField, TextAreaField,
 from flask.ext.login import (LoginManager, current_user, login_required,
                             login_user, logout_user, UserMixin, AnonymousUser,
                             confirm_login, fresh_login_required)
+from flaskext.cache import Cache
 
 app = Flask(__name__, template_folder=template_dir)
+cache = Cache(app)
 app.secret_key = app_secret_key
 app.config.from_object(__name__)
 app.config.update(DEBUG=True)
+app.config['CACHE_TYPE'] = 'memcached'
+app.config['CACHE_DEFAULT_TIMEOUT'] = 60
+app.config['CACHE_MEMCACHED_SERVERS'] = '127.0.0.1:11211'
 
 
 class Anonymous(AnonymousUser):
@@ -300,6 +305,7 @@ class write_article_form(Form):
 site_info = session.query(SiteInfo).first()
 
 @app.route('/')
+@cache.cached(timeout=60)
 def index():
     site_info = session.query(SiteInfo).first()
     site_menu = session.query(SiteMenu).all()
@@ -412,6 +418,7 @@ def board(board_name, page=1):
 #@app.route("/board/<board_name>/page/<page>/", defaults={'page': 1})
 @app.route("/board/<board_name>/page/<int:page>")
 @app.route("/board/<board_name>/page/<int:page>/")
+@cache.cached(timeout=60)
 def board_view(board_name,page):
     page = page - 1
     board = session.query(Board).filter_by(board_name = board_name).first()
@@ -429,6 +436,7 @@ def board_view(board_name,page):
                             lastest_article_number=lastest_article_number,
                             total_article_number=total_article_number,
                             site_menu=site_menu)
+
 @app.route("/board/<board_name>/write", methods=["GET", "POST"], 
             defaults={'page_number': 1})
 def board_write(board_name, page_number=1):
