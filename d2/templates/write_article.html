@@ -13,15 +13,20 @@
 {{ render_field(form.nick_name) }}
 {{ render_field(form.password) }}
 {{ render_field(form.title) }}
-{% endif %}
 {{ form.redactor(rows=20,cols=30) | safe }}
-
+{% endif %}
   <p><input type=submit value="write">
 </form>
 
 <script>
 $(document).ready( function() {
-		$('#redactor').redactor();
+			
+		var a = $('#redactor')
+		a.css("width","100%")
+		a.css("height","340px")
+		a.redactor(
+			{ imageUpload: '/board/upload'}
+		)
 	}
 )
 </script>

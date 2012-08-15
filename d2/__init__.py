@@ -13,6 +13,7 @@ db_id = config.get('db', 'db_id')
 db_password = config.get('db', 'db_password')
 db_name = config.get('db', 'db_name')
 app_secret_key = config.get('app', 'app_secret_key')
+file_upload_path = config.get('app','file_upload_path')
 debug_mode = config.get('app', 'debug_mode')
 per_page = int(config.get('app', 'per_page'))
 port = config.get('app', 'port')
@@ -40,6 +41,9 @@ if debug_mode:
     import os
     app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {
       '/': os.path.join(os.path.dirname(__file__), 'static') })
+    upload_url = os.path.basename( file_upload_path )
+    app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {
+      '/': os.path.join(os.path.dirname(__file__),  upload_url) })
 
 class Anonymous(AnonymousUser):
     nick_name = u"anonymous"
@@ -441,6 +445,22 @@ def board_view(board_name,page):
                             lastest_article_number=lastest_article_number,
                             total_article_number=total_article_number,
                             site_menu=site_menu)
+
+import json
+import time
+@app.route("/board/upload", methods=["POST"] )
+def board_upload():
+    if request.method != "POST":
+        return "Error"
+    file = request.files['file']
+    if file and file.filename.endswith(".jpg"):
+        secure_filename = str(int(time.time())) + ".jpg"
+        file.save( os.path.join( file_upload_path , secure_filename ))
+        url_path = os.path.basename( file_upload_path )
+        return json.dumps(
+            { "filelink" : os.path.join ( url_path , secure_filename )})
+    return json.dumps({})
+    #file_upload_path
 
 @app.route("/board/<board_name>/write", methods=["GET", "POST"], 
             defaults={'page_number': 1})
