@@ -35,6 +35,11 @@ app.config['CACHE_TYPE'] = 'memcached'
 app.config['CACHE_DEFAULT_TIMEOUT'] = 60
 app.config['CACHE_MEMCACHED_SERVERS'] = '127.0.0.1:11211'
 
+if debug_mode:
+    from werkzeug import SharedDataMiddleware
+    import os
+    app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {
+      '/': os.path.join(os.path.dirname(__file__), 'static') })
 
 class Anonymous(AnonymousUser):
     nick_name = u"anonymous"
