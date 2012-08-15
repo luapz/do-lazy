@@ -28,7 +28,7 @@ from flask.ext.login import (LoginManager, current_user, login_required,
 from flaskext.cache import Cache
 
 app = Flask(__name__, template_folder=template_dir)
-cache = Cache(app)
+cache_ = Cache(app)
 app.secret_key = app_secret_key
 app.config.from_object(__name__)
 app.config.update(DEBUG=True)
@@ -311,19 +311,36 @@ class write_article_form(Form):
                                 validators.Required()])
     redactor = TextAreaField('Text', default="")
 
-site_info = session.query(SiteInfo).first()
+from werkzeug.contrib.cache import MemcachedCache
+cache = MemcachedCache(['127.0.0.1:11211'])
+
+def site_info():
+    rv = cache.get('site_info')
+    if rv is None:
+        rv = session.query(SiteInfo).first()
+        cache.set('site_info', rv, timeout=5 * 60 * 60)
+    return rv
+
+def site_menu():
+    rv = cache.get('site_menu')
+    if rv is None:
+        rv = session.query(SiteMenu).all()
+        cache.set('site_menu', rv, timeout=5 * 60 * 60)
+    return rv
+
 
 @app.route('/')
-@cache.cached(timeout=60)
+@cache_.cached(timeout=60)
 def index():
-    site_info = session.query(SiteInfo).first()
-    site_menu = session.query(SiteMenu).all()
-    return render_template('index.html', site_info = site_info, 
-                            site_menu=site_menu)
+    context =  { 'site_info' : site_info(),
+                'site_menu' : site_menu() }
+    return render_template('index.html', **context)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = registration_form(request.form)
+    context = { 'form' : form, 'site_info' : site_info(), 
+                'site_menu' : site_menu() }
     return render_template('register.html', form=form)
 
 @app.route('/register/add', methods=['GET', 'POST'])
@@ -340,8 +357,9 @@ def register():
         except:
             session.rollback() 
         flash('Thanks for registering')
-        return redirect(url_for('index'))
-    return render_template('register.html', form=form, site_info=site_info)
+        return redirect(url_for('login'))
+    context = { 'form': form, 'site_info': site_info(), 'site_menu': site_menu() }
+    return render_template('register.html', **context)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -362,7 +380,8 @@ def login():
                 return redirect(url_for('index'))
             else:
                 return "wrong password"
-    return render_template("login.html", form=form, site_info=site_info)
+    context = { 'form' : form, 'site_info': site_info(), 'site_menu': site_menu() }
+    return render_template("login.html", **context)
 
 @app.route("/logout")
 @login_required
@@ -376,8 +395,8 @@ def profile(user_name):
     form = profile_form(request.form)
     user_name = current_user.user_name
     user = session.query(User).filter_by(user_name = user_name).first()
-    return unicode(user)
-#    return render_template("profile.html", form=form, site_info=site_info) 
+    context = { 'form': form, 'site_info': site_info(), 'site_menu': site_menu() }
+    return render_template("profile.html", **context) 
 
 @app.route("/article/<int:article_number>")
 def article_view(article_number):
@@ -388,8 +407,8 @@ def article_view(article_number):
         session.commit()
     except:
         session.rollback()
-    return render_template("article.html", article_detail=article_detail, 
-                            site_info=site_info)
+    context = { 'article_detail' : article_detail, 'site_info': site_info(), 'site_menu': site_menu() }
+    return render_template("article.html", **context)
 
 @app.route("/article/write", methods=["GET", "POST"])
 def write_article():
@@ -417,7 +436,8 @@ def write_article():
             session.rollback()
         flash('article write')
         return redirect(url_for('index'))
-    return render_template("write_article.html", form=form, site_info=site_info) 
+    context = { 'form' : form, 'site_info': site_info(), 'site_menu': site_menu() }
+    return render_template("write_article.html", **context) 
 
 @app.route("/board/<board_name>")
 @app.route("/board/<board_name>/")
@@ -427,7 +447,6 @@ def board(board_name, page=1):
 #@app.route("/board/<board_name>/page/<page>/", defaults={'page': 1})
 @app.route("/board/<board_name>/page/<int:page>")
 @app.route("/board/<board_name>/page/<int:page>/")
-@cache.cached(timeout=60)
 def board_view(board_name,page):
     page = page - 1
     board = session.query(Board).filter_by(board_name = board_name).first()
@@ -437,14 +456,14 @@ def board_view(board_name,page):
     article_to = (int(page) + 1) * int(per_page)
     article_list = session.query(Article).filter(Article.board_id==1).order_by(desc(Article.id)).filter(Article.is_public==True)[article_from:article_to]
     pagination = Pagination(page, per_page, lastest_article_number)
-    site_menu = session.query(SiteMenu).all()
-    return render_template("board.html", article_list=article_list, 
-                            site_info=site_info, board=board, 
-                            page=page, per_page=per_page,
-                            pagination=pagination,
-                            lastest_article_number=lastest_article_number,
-                            total_article_number=total_article_number,
-                            site_menu=site_menu)
+    context = { 'article_list': article_list, 
+                'site_info': site_info, 'board' : board, 
+                'page' : page, 'per_page': per_page,
+                'pagination' : pagination, 
+                'lastest_article_number': lastest_article_number,
+                'total_article_number' : total_article_number,
+                'site_info': site_info(), 'site_menu': site_menu() }
+    return render_template("board.html", **context)
 
 import json
 import time
@@ -497,19 +516,11 @@ def board_write(board_name, page_number=1):
             session.commit()
         except:
             session.rollback()
-        # update public article count number
-        public_article_count = session.query(Article).filter(Article.is_public.like(True)).count() 
-        board.article_number = public_article_count
-        session.add(board)
-        try:
-            session.commit()
-        except:
-            session.rollback()
         flash('article write')
-        b = "/board/%s" % (b_name)
-        return redirect(url_for('board_view', board_name=b_name, page_number=1))
-    return render_template("write_article.html", form=form, 
-                            site_info=site_info, board_name=board_name) 
+        return redirect(url_for('index'))
+    context = { 'form' : form, 'site_info': site_info(), 'site_menu': site_menu(),
+                'board_name': board_name }
+    return render_template("write_article.html", **context)
 
 
 
