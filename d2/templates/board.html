@@ -73,11 +73,7 @@
 </div> <!-- div board_list end -->
 
 <div id="button_nav">
-        <span class="btn list">
-            <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page_now) }}">list</a>
-        </span>
-        <span class="btn write">
-            <a class="none-decoration" href="{{ url_for ('board_write', board_name = board.board_name) }}">write</a>
-        </span>
+    <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page_now) }}"><span class="btn list">list</span></a>
+    <a class="none-decoration" href="{{ url_for ('board_write', board_name = board.board_name) }}"><span class="btn write">write</span></a>
 </div> <!-- div button_nav -->
 {% endblock %}
