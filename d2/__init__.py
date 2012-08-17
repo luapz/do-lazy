@@ -411,65 +411,38 @@ def profile(user_name):
 @app.route("/article/<int:article_number>")
 def article_view(article_number):
     article_detail = session.query(Article).filter_by(id = article_number).first()
+    board = session.query(Board).filter_by(board_id = article_detail.board_id).first()
     article_detail.hits = article_detail.hits + 1
     session.add(article_detail)
     try:
         session.commit()
     except:
         session.rollback()
-    context = { 'article_detail' : article_detail, 'site_info': site_info(), 'site_menu': site_menu() }
+    context = { 'board': board, 'article_detail' : article_detail, 'site_info': site_info(), 'site_menu': site_menu() }
     return render_template("article.html", **context)
 
-@app.route("/article/write", methods=["GET", "POST"])
-def write_article():
-    form = write_article_form(request.form)
-    if request.method == 'POST':
-        if current_user.nick_name == "anonymous":
-            user_name = Anonymous.nick_name
-            nick_name = form.nick_name.data
-            password = encode_sha256(encode_md5(form.password.data+user_name))
-        else:
-            user_name = current_user.user_name
-            nick_name = current_user.nick_name
-            password = current_user.password
-        text = form.redactor.data
-        creat_date = datetime.now()
-        modified_date = datetime.now()
-        is_public = True
-        remote_addr = request.remote_addr
-        article = Article(user_name, nick_name, password, text, creat_date, 
-                            modified_date, is_public, remote_addr)
-        session.add(article)
-        try:
-            session.commit()
-        except:
-            session.rollback()
-        flash('article write')
-        return redirect(url_for('index'))
-    context = { 'form' : form, 'site_info': site_info(), 'site_menu': site_menu() }
-    return render_template("write_article.html", **context) 
 
 @app.route("/board/<board_name>")
 @app.route("/board/<board_name>/")
 def board(board_name, page=1):
     return redirect(url_for('board_view', board_name=board_name, page=page))
-#@app.route("/board/<board_name>/page/<page>", defaults={'page': 1})
-#@app.route("/board/<board_name>/page/<page>/", defaults={'page': 1})
 @app.route("/board/<board_name>/page/<int:page>")
 @app.route("/board/<board_name>/page/<int:page>/")
 def board_view(board_name,page):
     page = page - 1
+    next_page = page + 2
     board = session.query(Board).filter_by(board_name = board_name).first()
     lastest_article_number = int(session.query(Article).filter(Article.board_id==board.board_id).filter(Article.is_public==True).count())
     total_article_number = int(session.query(Article).filter(Article.board_id==board.board_id).filter(Article.is_public==True).count()) - (page * per_page)
     article_from = int(page) * int(per_page)
     article_to = (int(page) + 1) * int(per_page)
-    article_list = session.query(Article).filter(Article.board_id==1).order_by(desc(Article.id)).filter(Article.is_public==True)[article_from:article_to]
+    article_list = session.query(Article).filter(Article.board_id==board.board_id).order_by(desc(Article.id)).filter(Article.is_public==True)[article_from:article_to]
+    notice_list = session.query(Article).filter(Article.board_id==board.board_id).filter(Article.is_notice==True).order_by(desc(Article.id)).filter(Article.is_public==True).all()
     pagination = Pagination(page, per_page, lastest_article_number)
-    context = { 'article_list': article_list, 
+    context = { 'article_list': article_list, 'notice_list': notice_list, 
                 'site_info': site_info, 'board' : board, 
                 'page' : page, 'per_page': per_page,
-                'pagination' : pagination, 
+                'pagination' : pagination, 'next_page': next_page, 
                 'lastest_article_number': lastest_article_number,
                 'total_article_number' : total_article_number,
                 'site_info': site_info(), 'site_menu': site_menu() }
@@ -485,7 +458,7 @@ def board_upload():
     if file and file.filename.endswith(".jpg"):
         secure_filename = str(int(time.time())) + ".jpg"
         file.save( os.path.join( file_upload_path , secure_filename ))
-        url_path = os.path.basename( file_upload_path )
+        url_path = "/" + str(os.path.basename( file_upload_path ))
         return json.dumps(
             { "filelink" : os.path.join ( url_path , secure_filename )})
     return json.dumps({})
@@ -526,7 +499,6 @@ def board_write(board_name, page_number=1):
         except:
             session.rollback()
         flash('article write')
-#        return redirect(url_for('index'))
         return redirect(url_for('board_view', board_name=board_name, page=1))
     context = { 'form' : form, 'site_info': site_info(), 'site_menu': site_menu(),
                 'board_name': board_name }

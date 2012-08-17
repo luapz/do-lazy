@@ -2,49 +2,67 @@
 
 {% block body %}
 
-<table id="article_list">
-    <thead>
-        <tr>
-            <th id="number"><p>번호</p></th>
-            <th id="title"><p>제목</p></th>
-            <th id="writer"><p>글쓴이</p></th>
-            <th id="hits"><p>조회</p></th>
-        </tr>
-    </thead>
-    <tbody>
-{% for i in article_list %}
-        <tr>
-            <td id="number">{{ total_article_number }}</td>
-            <td id="title"><a href="/article/{{ i.id }}"><p>{{ i.title }}</p></a></td>
-            <td id="writer">{{ i.nick_name }}</td>
-            <td id="hits">{{ i.hits }}</td>
-            {% set total_article_number = total_article_number - 1 %}
-        </tr>
-{% endfor %}
-    </tbody>
-</table>
+<div id="board_header">
+    <a href="/board/{{ board.board_name }}/" class="none-decoration">
+        <h1>{{ board.board_name }}</h1>
+        <p>{{ board.board_desc }}</p>
+    </a>
+</div> <!-- div board_header end -->
+
+<div id="board_list">
+    <table id="article_list">
+        <thead>
+            <tr>
+                <th id="number"><p>번호</p></th>
+                <th id="title"><p>제목</p></th>
+                <th id="writer"><p>글쓴이</p></th>
+                <th id="hits"><p>조회</p></th>
+            </tr>
+        </thead>
+        <tbody>
+    {% for i in notice_list %}
+            <tr class="notice">
+                <td id="number">공지</td>
+                <td id="title"><a href="/article/{{ i.id }}"><p>{{ i.title }}</p></a></td>
+                <td id="writer">{{ i.nick_name }}</td>
+                <td id="hits">{{ i.hits }}</td>
+            </tr>
+    {% endfor %}
+
+    {% for i in article_list %}
+            <tr>
+                <td id="number">{{ total_article_number }}</td>
+                <td id="title"><a href="/article/{{ i.id }}"><p>{{ i.title }}</p></a></td>
+                <td id="writer">{{ i.nick_name }}</td>
+                <td id="hits">{{ i.hits }}</td>
+                {% set total_article_number = total_article_number - 1 %}
+            </tr>
+    {% endfor %}
+        </tbody>
+    </table>
 
 
-  <div class=pagination>
-  {%- for page in pagination.iter_pages() %}
-    {% if page %}
-      {% if page != pagination.page %}
-        <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
-      {% else %}
-        <strong>{{ page }}</strong>
+      <div class=pagination>
+      {%- for page in pagination.iter_pages() %}
+        {% if page %}
+          {% if page != pagination.page %}
+            <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+          {% else %}
+            <strong>{{ page }}</strong>
+          {% endif %}
+        {% else %}
+          <span class=ellipsis>…</span>
+        {% endif %}
+      {%- endfor %}
+      {% if pagination.has_next %}
+        <a href="{{ url_for('board_view', board_name=board.board_name, page=next_page) }}">Next &raquo;</a>
       {% endif %}
-    {% else %}
-      <span class=ellipsis>…</span>
-    {% endif %}
-  {%- endfor %}
-  {% if pagination.has_next %}
-    <a href="{{ url_for_other_page(page + 1)
-      }}">Next &raquo;</a>
-  {% endif %}
-  </div>
+      </div>
 
 
 
-<a href="{{ url_for ('board_write', board_name = board.board_name) }}"><span class="btn">write</span></a>
+    <a href="{{ url_for ('board_write', board_name = board.board_name) }}"><span class="btn">write</span></a>
+
+</div> <!-- div board_list end -->
 
 {% endblock %}

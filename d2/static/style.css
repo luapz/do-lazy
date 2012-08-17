@@ -7,6 +7,8 @@
 #header {
     width: 150px;
     float: left;
+    text-align: center;
+    margin-right: 15px;
 }
 
 #header h1 {
@@ -19,6 +21,13 @@
 
 ul#menu {
     margin-top: 15px;
+    list-style: none;
+}
+ul#menu li {
+    text-align: center;
+    margin: 0px;
+    float: left;
+    width: 100px;
 }
 
 ul#auth {
@@ -48,6 +57,13 @@ ul#auth li {
     margin-left: 35px;
 }
 
+#board_header {
+}
+
+#board_header h1 {
+    font-size: 2em;
+}
+
 #article_list {
     font-size: 0.9em;
     border-collapse: collapse;
@@ -56,12 +72,12 @@ ul#auth li {
 
 #article_list > thead {
     height: 30px;
-    background: url('http://instiznet.jpg1.kr/images/bg_btn_big.png') no-repeat;
 
 }
 
 #article_list > thead > tr {
     height: 30px;
+    background-color: #E9E6DA;
 }
 
 #article_list > thead > tr > th {
@@ -70,19 +86,22 @@ ul#auth li {
 
 #article_list > thead > tr > th > p {
     margin-top: 4px;
-    height: 15px;
 }
 
 #article_list > thead > tr, #article_list > tbody > tr {
     border-bottom: 1px #ccc solid;
 }
 
+#article_list > tbody > tr.notice {
+    background-color: #F6F5ED; 
+}
 #article_list > tbody > tr:hover {
     background-color: #eee;
 }
 
 #article_list > tbody > tr > td {
     height: 20px;
+    vertical-align:middle;
 }
 
 th#number, td#number {
@@ -101,16 +120,35 @@ th#writer, td#writer {
     padding-left: 5px;
 }
 
-th#title, td#title {
-    padding-left: 5px;
+#article_list p {
+    margin: 0px;
 }
 
 th#hits, td#hits {
     width: 50px;
 }
 
+#board_header {
+}
+
+#board_list, #article {
+    margin-top: 45px;
+}
+
+#article_header {
+    font-weight: bold;
+}
+
+#article_header h1 {
+    font-size: 1.6em;
+}
+
+.pagination {
+    margin-bottom: 15px;
+}
+
 #sidebar {
-    width: 220px;
+    width: 205px;
     padding-left: 15px;
     float: right;
 }

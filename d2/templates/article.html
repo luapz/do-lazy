@@ -1,6 +1,22 @@
 {% extends "layout.html" %}
 
 {% block body %}
-{{ article_detail.title }}
-{{ article_detail.text | safe }}
+
+<div id="board_header">
+    <a href="/board/{{ board.board_name }}/" class="none-decoration">
+        <h1>{{ board.board_name }}</h1>
+        <p>{{ board.board_desc }}</p>
+    </a>
+</div> <!-- div board_header end -->
+
+
+<div id="article">
+    <div id="article_header">
+        <h1>{{ article_detail.title }}</h1>
+        <p>{{ article_detail.nick_name }}</p>
+    </div> <!-- article_header end -->
+    <div id="article_contents">
+        {{ article_detail.text | safe }}
+    </div> <!-- div article_contents end -->
+</div> <!-- div article end -->
 {% endblock %}
