@@ -317,6 +317,13 @@ class write_article_form(Form):
                                 validators.Required()])
     redactor = TextAreaField('Text', default="")
 
+def board_info():
+    rv = cache.get('board_info')
+    if rv is None:
+        rv = session.query(Board).all()
+        cache.set('board_info', rv, timeout=5 * 60 * 60)
+    return rv
+
 def site_info():
     rv = cache.get('site_info')
     if rv is None:
@@ -453,8 +460,8 @@ def board(board_name, page=1):
 def board_view(board_name,page):
     page = page - 1
     board = session.query(Board).filter_by(board_name = board_name).first()
-    lastest_article_number = int(session.query(Article).filter(Article.board_id==1).filter(Article.is_public==True).count())
-    total_article_number = int(session.query(Article).filter(Article.board_id==1).filter(Article.is_public==True).count()) - (page * per_page)
+    lastest_article_number = int(session.query(Article).filter(Article.board_id==board.board_id).filter(Article.is_public==True).count())
+    total_article_number = int(session.query(Article).filter(Article.board_id==board.board_id).filter(Article.is_public==True).count()) - (page * per_page)
     article_from = int(page) * int(per_page)
     article_to = (int(page) + 1) * int(per_page)
     article_list = session.query(Article).filter(Article.board_id==1).order_by(desc(Article.id)).filter(Article.is_public==True)[article_from:article_to]
@@ -490,7 +497,6 @@ def board_write(board_name, page_number=1):
     form = write_article_form(request.form)
     board = session.query(Board).filter_by(board_name = board_name).first()
     board_id = board.board_id
-    b_name = board.board_name
     if request.method == 'POST':
         if current_user.nick_name == "anonymous":
             user_name = Anonymous.nick_name
@@ -520,7 +526,8 @@ def board_write(board_name, page_number=1):
         except:
             session.rollback()
         flash('article write')
-        return redirect(url_for('index'))
+#        return redirect(url_for('index'))
+        return redirect(url_for('board_view', board_name=board_name, page=1))
     context = { 'form' : form, 'site_info': site_info(), 'site_menu': site_menu(),
                 'board_name': board_name }
     return render_template("write_article.html", **context)
@@ -593,3 +600,5 @@ def write_article():
         except:
             session.rollback()
     return unicode("inserted")
+
+
