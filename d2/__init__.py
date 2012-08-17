@@ -293,9 +293,9 @@ app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 
 
 class registration_form(Form):
-    user_name = TextField('id', [validators.Length(min=4, max=20)])
-    nick_name = TextField('Nick name', [validators.Length(min=4, max=20)])
-    email = TextField('Email address', [validators.Length(min=4, max=50)])
+    user_name = TextField('id', [validators.Length(min=2, max=20)])
+    nick_name = TextField('Nick name', [validators.Length(min=2, max=20)])
+    email = TextField('Email address', [validators.Length(min=2, max=50)])
     password = PasswordField('password', [
         validators.Required(),
         validators.EqualTo('confirm', message='Passwords must match')
@@ -303,7 +303,7 @@ class registration_form(Form):
     confirm = PasswordField('confirm Password')
 
 class login_form(Form):
-    user_name = TextField('id', [validators.Length(min=4, max=50), 
+    user_name = TextField('id', [validators.Length(min=2, max=50), 
                                 validators.Required()])
     password = PasswordField('Password', [validators.Required()])
     remember = BooleanField('remember')
