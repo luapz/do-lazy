@@ -32,9 +32,17 @@
     {% for i in article_list %}
             <tr>
                 <td id="number">{{ total_article_number }}</td>
-                <td id="title"><a href="/article/{{ i.id }}"><p>{{ i.title }}</p></a></td>
-                <td id="writer">{{ i.nick_name }}</td>
-                <td id="hits">{{ i.hits }}</td>
+                <td id="title">
+                    <a href="/article/{{ i.id }}">
+                        <p>{{ i.title|truncate(max_title_string, true, '..') }}</p>
+                    </a>
+                </td>
+                <td id="writer">
+                    {{ i.nick_name|truncate(max_nick_name_string, true, '..') }}
+                </td>
+                <td id="hits">
+                    {{ i.hits }}
+                </td>
                 {% set total_article_number = total_article_number - 1 %}
             </tr>
     {% endfor %}

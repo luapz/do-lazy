@@ -17,6 +17,8 @@ file_upload_path = config.get('app','file_upload_path')
 debug_mode = config.get('app', 'debug_mode')
 per_page = int(config.get('app', 'per_page'))
 port = config.get('app', 'port')
+max_title_string = int(config.get('board', 'max_title_string'))
+max_nick_name_string = int(config.get('board', 'max_nick_name_string'))
 
 import hashlib
 from datetime import datetime
@@ -441,12 +443,15 @@ def board_view(board_name,page):
     pagination = Pagination(page, per_page, lastest_article_number)
     context = { 'article_list': article_list, 'notice_list': notice_list, 
                 'site_info': site_info, 'board' : board, 
+                'max_title_string': max_title_string,
+                'max_nick_name_string': max_nick_name_string,
                 'page' : page, 'per_page': per_page,
                 'pagination' : pagination, 'next_page': next_page, 
                 'lastest_article_number': lastest_article_number,
                 'total_article_number' : total_article_number,
                 'site_info': site_info(), 'site_menu': site_menu() }
     return render_template("board.html", **context)
+#    return unicode(article_list[4].nick_name)
 
 import json
 import time

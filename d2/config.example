@@ -9,3 +9,7 @@ file_upload_path =
 debug_mode = 
 per_page = 
 port = 
+
+[board]
+max_title_string =
+max_nick_name_string = 
