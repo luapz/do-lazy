@@ -23,7 +23,7 @@
     {% for i in notice_list %}
             <tr class="notice">
                 <td id="number">공지</td>
-                <td id="title"><a href="/article/{{ i.id }}"><p>{{ i.title|truncate(max_title_string, true, '..') }}</p></a></td>
+                <td id="title"><a href="/board/{{ board_name }}/page/{{ page_now }}/article/{{ i.id }}"><p>{{ i.title|truncate(max_title_string, true, '..') }}</p></a></td>
                 <td id="writer">{{ i.nick_name|truncate(max_nick_name_string, true, '..') }}</td>
                 <td id="hits">{{ i.hits }}</td>
             </tr>
@@ -33,7 +33,7 @@
             <tr>
                 <td id="number">{{ total_article_number }}</td>
                 <td id="title">
-                    <a href="/article/{{ i.id }}">
+                    <a href="/board/{{ board_name }}/page/{{ page_now }}/article/{{ i.id }}">
                         <p>{{ i.title|truncate(max_title_string, true, '..') }}</p>
                     </a>
                 </td>
@@ -69,8 +69,15 @@
 
 
 
-    <a href="{{ url_for ('board_write', board_name = board.board_name) }}"><span class="btn">write</span></a>
 
 </div> <!-- div board_list end -->
 
+<div id="button_nav">
+        <span class="btn list">
+            <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page) }}">list</a>
+        </span>
+        <span class="btn write">
+            <a class="none-decoration" href="{{ url_for ('board_write', board_name = board.board_name) }}">write</a>
+        </span>
+</div> <!-- div button_nav -->
 {% endblock %}

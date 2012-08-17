@@ -7,28 +7,28 @@
 <script type="text/javascript" src="{{ url_for('static', filename='redactor/lib/jquery-1.7.min.js') }}" ></script>
 <script type="text/javascript" src="{{ url_for('static', filename='redactor/redactor/redactor.js') }}" ></script>
 
+{% if not current_user.is_authenticated() %}
 {%from "_formhelpers.html" import render_field %}
 <form method=post action="/board/{{ board_name }}/write">
-{% if not current_user.is_authenticated() %}
 {{ render_field(form.nick_name) }}
 {{ render_field(form.password) }}
 {{ render_field(form.title) }}
 {{ form.redactor(rows=20,cols=30) | safe }}
-{% endif %}
-  <p><input type=submit value="write">
-</form>
-
 <script>
 $(document).ready( function() {
-			
-		var a = $('#redactor')
-		a.css("width","100%")
-		a.css("height","340px")
-		a.redactor(
-			{ imageUpload: '/board/upload'}
-		)
-	}
+                        
+                var a = $('#redactor')
+                a.css("width","100%")
+                a.css("height","340px")
+                a.redactor(
+                        { imageUpload: '/board/upload'}
+                )
+        }
 )
 </script>
+ <input type=submit value="write" class="btn">
+</form>
+{% endif %}
+
 
 {% endblock %}

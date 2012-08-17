@@ -412,8 +412,8 @@ def profile(user_name):
     context = { 'form': form, 'site_info': site_info(), 'site_menu': site_menu() }
     return render_template("profile.html", **context) 
 
-@app.route("/article/<int:article_number>")
-def article_view(article_number):
+@app.route("/board/<board_name>/page/<int:page>/article/<int:article_number>")
+def article_view(board_name, page, article_number):
     article_detail = session.query(Article).filter_by(id = article_number).first()
     board = session.query(Board).filter_by(board_id = article_detail.board_id).first()
     article_detail.hits = article_detail.hits + 1
@@ -422,7 +422,9 @@ def article_view(article_number):
         session.commit()
     except:
         session.rollback()
-    context = { 'board': board, 'article_detail' : article_detail, 'site_info': site_info(), 'site_menu': site_menu() }
+    context = { 'board': board, 'article_detail' : article_detail, 
+                'page': page,
+                'site_info': site_info(), 'site_menu': site_menu() }
     return render_template("article.html", **context)
 
 
@@ -433,6 +435,7 @@ def board(board_name, page=1):
 @app.route("/board/<board_name>/page/<int:page>")
 @app.route("/board/<board_name>/page/<int:page>/")
 def board_view(board_name,page):
+    page_now = page
     page = page - 1
     next_page = page + 2
     board = session.query(Board).filter_by(board_name = board_name).first()
@@ -445,9 +448,10 @@ def board_view(board_name,page):
     pagination = Pagination(page, per_page, lastest_article_number)
     context = { 'article_list': article_list, 'notice_list': notice_list, 
                 'site_info': site_info, 'board' : board, 
+                'board_name': board_name,
                 'max_title_string': max_title_string,
                 'max_nick_name_string': max_nick_name_string,
-                'page' : page, 'per_page': per_page,
+                'page' : page, 'per_page': per_page, 'page_now': page_now,
                 'pagination' : pagination, 'next_page': next_page, 
                 'lastest_article_number': lastest_article_number,
                 'total_article_number' : total_article_number,
