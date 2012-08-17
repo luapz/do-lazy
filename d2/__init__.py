@@ -28,7 +28,7 @@ from flask.ext.login import (LoginManager, current_user, login_required,
 from flaskext.cache import Cache
 
 app = Flask(__name__, template_folder=template_dir)
-cache_ = Cache(app)
+memcached = Cache(app)
 app.secret_key = app_secret_key
 app.config.from_object(__name__)
 app.config.update(DEBUG=True)
@@ -44,6 +44,12 @@ if debug_mode:
     upload_url = os.path.basename( file_upload_path )
     app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {
       '/': os.path.join(os.path.dirname(__file__),  upload_url) })
+
+from werkzeug.contrib.cache import MemcachedCache
+cache = MemcachedCache(['127.0.0.1:11211'])
+
+import redis
+redis = redis.StrictRedis(host='localhost', port=6379, db="oneline")
 
 class Anonymous(AnonymousUser):
     nick_name = u"anonymous"
@@ -311,9 +317,6 @@ class write_article_form(Form):
                                 validators.Required()])
     redactor = TextAreaField('Text', default="")
 
-from werkzeug.contrib.cache import MemcachedCache
-cache = MemcachedCache(['127.0.0.1:11211'])
-
 def site_info():
     rv = cache.get('site_info')
     if rv is None:
@@ -330,7 +333,7 @@ def site_menu():
 
 
 @app.route('/')
-@cache_.cached(timeout=60)
+@memcached.cached(timeout=60)
 def index():
     context =  { 'site_info' : site_info(),
                 'site_menu' : site_menu() }
