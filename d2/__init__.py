@@ -118,14 +118,15 @@ class User(Base, UserMixin):
     creat_date = Column(DateTime)
     login_date = Column(DateTime)
     access_date = Column(DateTime)
-    is_confirm = Column(Boolean, nullable=False)
+    is_confirm = Column(Boolean, nullable=True)
     signature = Column(String(length=1000), nullable = True)
     icon_url = Column(String(length=256), nullable = True)
-    trophy = Column(String(length=200), nullable = True)
+    badge = Column(String(length=200), nullable = True)
 
     def __init__(self, user_name, nick_name, email, password, 
                 creat_date=None, login_date=None, access_date=None, 
-                signature=None, icon_url=None, trophy=None):
+                is_confirm=None,
+                signature=None, icon_url=None, badge=None):
         self.user_name = user_name
         self.nick_name = nick_name
         self.email = email
@@ -139,9 +140,10 @@ class User(Base, UserMixin):
         if access_date is None:
             access_date = sql_datetime()
         self.access_date = access_date
+        self.is_confirm = is_confirm
         self.signature = signature
         self.icon_url = icon_url
-        self.trophy = trophy
+        self.badge = badge
 
 class Board(Base):
     __tablename__ = 'board'
@@ -551,7 +553,7 @@ def write_article():
     except:
         session.rollback()
 
-    for i in range(1,40):
+    for i in range(1,40000):
         b_name = 1
         board_id = 1
         i = str(i)

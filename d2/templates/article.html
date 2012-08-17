@@ -13,7 +13,9 @@
 <div id="article">
     <div id="article_header">
         <h1>{{ article_detail.title }}</h1>
-        <p>{{ article_detail.nick_name }}</p>
+        <span id="nick_name">{{ article_detail.nick_name }}</span>
+        <span id="hits">조회 : {{ article_detail.hits }}</span><br />
+        <span id="creat_date">{{ article_detail.creat_date }}</span>
     </div> <!-- article_header end -->
     <div id="article_contents">
         {{ article_detail.text | safe }}

@@ -136,11 +136,24 @@ th#hits, td#hits {
 }
 
 #article_header {
-    font-weight: bold;
 }
 
 #article_header h1 {
     font-size: 1.6em;
+}
+
+#article_header #nick_name {
+    display : block;
+    float: left;
+}
+
+#article_header #creat_date, #article_header #hits {
+    display : block;
+    float: right;
+}
+
+#article_contents {
+    clear: both;
 }
 
 .pagination {
