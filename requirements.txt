@@ -1,6 +1,7 @@
 Flask
 Flask-login
 Flask-cache
+Flask-Babel
 mysql-python
 wtforms
 sqlalchemy

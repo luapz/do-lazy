@@ -34,4 +34,80 @@
         <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page) }}"><span class="btn edit">edit</span></a>
     {% endif %}
 </div> <!-- div button_nav -->
+
+
+<div id="board_list">
+    <table id="article_list">
+        <thead>
+            <tr>
+                <th id="number"><p>번호</p></th>
+                <th id="title"><p>제목</p></th>
+                <th id="writer"><p>글쓴이</p></th>
+                <th id="hits"><p>조회</p></th>
+            </tr>
+        </thead>
+        <tbody>
+    {% for i in notice_list %}
+            <tr class="notice">
+                <td id="number">공지</td>
+                <td id="title"><a href="/board/{{ board_name }}/page/{{ page_now }}/article/{{ i.id }}"><p>{{ i.title|truncate(max_title_string, true, '..') }}</p></a></td>
+                <td id="writer">{{ i.nick_name|truncate(max_nick_name_string, true, '..') }}</td>
+                <td id="hits">{{ i.hits }}</td>
+            </tr>
+    {% endfor %}
+
+    {% for i in article_list %}
+            <tr>
+                <td id="number">
+                        {% if i.id == article_detail.id %}
+                            <span class="current_number">-</span> 
+                        {% else %}
+                            {{ total_article_number }}
+                        {% endif %}
+                </td>
+                <td id="title">
+                    <a href="/board/{{ board_name }}/page/{{ page_now }}/article/{{ i.id }}">
+                        <p>{{ i.title|truncate(max_title_string, true, '..') }}</p>
+                    </a>
+                </td>
+                <td id="writer">
+                    {{ i.nick_name|truncate(max_nick_name_string, true, '..') }}
+                </td>
+                <td id="hits">
+                    {{ i.hits }}
+                </td>
+                {% set total_article_number = total_article_number - 1 %}
+            </tr>
+    {% endfor %}
+        </tbody>
+    </table>
+
+
+      <div class=pagination>
+      {%- for page in pagination.iter_pages() %}
+        {% if page %}
+          {% if page != pagination.page %}
+            <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+          {% else %}
+            <strong>{{ page }}</strong>
+          {% endif %}
+        {% else %}
+          <span class=ellipsis>…</span>
+        {% endif %}
+      {%- endfor %}
+      {% if pagination.has_next %}
+        <a href="{{ url_for('board_view', board_name=board.board_name, page=next_page) }}">Next &raquo;</a>
+      {% endif %}
+      </div>
+
+
+
+
+</div> <!-- div board_list end -->
+
+<div id="button_nav">
+    <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page_now) }}"><span class="btn list">list</span></a>
+    <a class="none-decoration" href="{{ url_for ('board_write', board_name = board.board_name) }}"><span class="btn write">write</span></a>
+</div> <!-- div button_nav -->
+
 {% endblock %}

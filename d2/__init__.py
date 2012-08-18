@@ -22,7 +22,7 @@ max_nick_name_string = int(config.get('board', 'max_nick_name_string'))
 
 import hashlib
 from datetime import datetime
-from flask import Flask, render_template, request, flash, url_for, redirect, make_response, current_app
+from flask import Flask, render_template, request, flash, url_for, redirect, make_response, current_app, g
 from wtforms import Form, BooleanField, TextField, PasswordField, TextAreaField, validators
 from flask.ext.login import (LoginManager, current_user, login_required,
                             login_user, logout_user, UserMixin, AnonymousUser,
@@ -82,6 +82,23 @@ engine = create_engine('mysql://%s:%s@localhost/%s?charset=utf8' %  (db_id, db_p
 
 Base = declarative_base()
 sql_datetime = DateTime
+
+from flaskext.babel import Babel
+babel = Babel(app)
+app.config['BABEL_DEFAULT_LOCALE'] = 'ko'
+
+@babel.localeselector
+def get_locale():
+    # if a user is logged in, use the locale from the user settings
+    user = getattr(g, 'user', None)
+    if user is not None:
+        return user.locale
+    # otherwise try to guess the language from the user accept
+    # header the browser transmits.  We support de/fr/en in this
+    # example.  The best match wins.
+    return request.accept_languages.best_match(['ko', 'en'])
+
+
 
 
 class SiteInfo(Base):
@@ -422,8 +439,27 @@ def article_view(board_name, page, article_number):
         session.commit()
     except:
         session.rollback()
-    context = { 'board': board, 'article_detail' : article_detail, 
-                'page': page,
+    page_now = page
+    page = page - 1
+    next_page = page + 2
+    board = session.query(Board).filter_by(board_name = board_name).first()
+    lastest_article_number = int(session.query(Article).filter(Article.board_id==board.board_id).filter(Article.is_public==True).count())
+    total_article_number = int(session.query(Article).filter(Article.board_id==board.board_id).filter(Article.is_public==True).count()) - (page * per_page)
+    article_from = int(page) * int(per_page)
+    article_to = (int(page) + 1) * int(per_page)
+    article_list = session.query(Article).filter(Article.board_id==board.board_id).order_by(desc(Article.id)).filter(Article.is_public==True)[article_from:article_to]
+    notice_list = session.query(Article).filter(Article.board_id==board.board_id).filter(Article.is_notice==True).order_by(desc(Article.id)).filter(Article.is_public==True).all()
+    pagination = Pagination(page, per_page, lastest_article_number)
+    context = { 'article_list': article_list, 'notice_list': notice_list, 
+                'site_info': site_info, 'board' : board, 
+                'board_name': board_name,
+                'article_detail': article_detail,
+                'max_title_string': max_title_string,
+                'max_nick_name_string': max_nick_name_string,
+                'page' : page, 'per_page': per_page, 'page_now': page_now,
+                'pagination' : pagination, 'next_page': next_page, 
+                'lastest_article_number': lastest_article_number,
+                'total_article_number' : total_article_number,
                 'site_info': site_info(), 'site_menu': site_menu() }
     return render_template("article.html", **context)
 
