@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 
+from d2 import app
+ 
 # start / loading from config file
 
 import ConfigParser
@@ -21,18 +23,15 @@ from flask.ext.login import (LoginManager, current_user, login_required,
                             login_user, logout_user, UserMixin, AnonymousUser,
                             confirm_login, fresh_login_required)
 from flaskext.cache import Cache
-from d2 import app
 
-app = Flask(__name__)
+#app = Flask(__name__)
 
 # start / app&memcached config
 
 memcached = Cache(app)
-
 app.secret_key = app_secret_key
 app.config.from_object(__name__)
 app.config.update(DEBUG=True)
-
 app.config['CACHE_TYPE'] = memcached_cache_type
 app.config['CACHE_DEFAULT_TIMEOUT'] = memcached_cache_default_timeout
 app.config['CACHE_MEMCACHED_SERVERS'] = memcached_cache_servers

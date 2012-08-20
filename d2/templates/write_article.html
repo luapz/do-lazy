@@ -1,34 +1,80 @@
 {% extends "layout.html" %}
 
 {% block body %}
-{% from "_formhelpers.html" import render_field %}
 <link rel="stylesheet" href="{{ url_for('static', filename='redactor/css/style.css') }}" />
 <link rel="stylesheet" href="{{ url_for('static', filename='redactor/redactor/redactor.css') }}" />
 <script type="text/javascript" src="{{ url_for('static', filename='redactor/lib/jquery-1.7.min.js') }}" ></script>
 <script type="text/javascript" src="{{ url_for('static', filename='redactor/redactor/redactor.js') }}" ></script>
 
-{% if not current_user.is_authenticated() %}
-{%from "_formhelpers.html" import render_field %}
-<form method=post action="/board/{{ board_name }}/write">
-{{ render_field(form.nick_name) }}
-{{ render_field(form.password) }}
-{{ render_field(form.title) }}
-{{ form.redactor(rows=20,cols=30) | safe }}
-<script>
-$(document).ready( function() {
-                        
-                var a = $('#redactor')
-                a.css("width","100%")
-                a.css("height","340px")
-                a.redactor(
-                        { imageUpload: '/board/upload'}
-                )
-        }
-)
-</script>
- <input type=submit value="write" class="btn">
-</form>
-{% endif %}
+{% if current_user.is_authenticated() %}
+    {% if temp_article %}
+        {%from "_formhelpers.html" import render_field %}
+        <form method=post action="/temp_write">
+        {{ render_field(form.title, value=temp_article.title) }}
+        {{ render_field(form.redactor, value=temp_article.text) | safe }}
 
+        <script>
+        $(document).ready( function() {
+                        var a = $('#redactor')
+                        a.css("width","100%")
+                        a.css("height","340px")
+                        a.redactor(
+                                { imageUpload: '/board/upload',
+                                autosave: '/temp_write',
+                                interval: 30}
+                                )
+                                        }
+        )
+        </script>
+         <input type=submit value="write" class="btn">
+        </form>
+    {% else %}
+
+        {%from "_formhelpers.html" import render_field %}
+        <form method=post action="/temp_write">
+        {{ render_field(form.title) }}
+        {{ form.redactor(rows=20,cols=30) | safe }}
+
+        <script>
+        $(document).ready( function() {
+                        var a = $('#redactor')
+                        a.css("width","100%")
+                        a.css("height","340px")
+                        a.redactor(
+                                { imageUpload: '/board/upload',
+                                autosave: '/temp_write',
+                                interval: 30}
+                                )
+                                        }
+        )
+        </script>
+         <input type=submit value="write" class="btn">
+        </form>
+    {% endif %}
+
+{% else %}
+ 
+    {%from "_formhelpers.html" import render_field %}
+    <form method=post action="/temp_write">
+    {{ render_field(form.nick_name) }}
+    {{ render_field(form.password) }}
+    {{ render_field(form.title) }}
+    {{ form.redactor(rows=20,cols=30) | safe }}
+    <script>
+    $(document).ready( function() {
+                    var a = $('#redactor')
+                    a.css("width","100%")
+                    a.css("height","340px")
+                    a.redactor(
+                            { imageUpload: '/board/upload',
+                            autosave: '/temp_write',
+                            interval: 30}
+                            )
+                                    }
+    )
+    </script>
+     <input type=submit value="write" class="btn">
+    </form>
+{% endif %}
 
 {% endblock %}

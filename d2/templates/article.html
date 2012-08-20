@@ -9,7 +9,6 @@
     </a>
 </div> <!-- div board_header end -->
 
-
 <div id="article">
     <div id="article_header">
         <h1>{{ article_detail.title }}</h1>
@@ -23,7 +22,7 @@
 </div> <!-- div article end -->
     
 <div id="button_nav">
-    <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page) }}"><span class="btn list">list</span></a>
+    <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page_now) }}"><span class="btn list">list</span></a>
     <a class="none-decoration" href="{{ url_for ('board_write', board_name = board.board_name) }}"><span class="btn write">write</span></a>
     {% if not current_user.is_authenticated() %}
         {% if article_detail.user_name == "anonymous" %}
