@@ -657,8 +657,7 @@ def board_write(board_name, page_number=1):
 @app.route("/temp_write", methods=["POST"])
 def temp_article_write():
     form = write_article_form(request.form)
-    print form.data
-    return "a"
+    temp_text = request.form['data']
     '''
     form = write_article_form(request.form)
     creat_date = datetime.now()
