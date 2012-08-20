@@ -648,6 +648,7 @@ def board_write(board_name, page_number=1):
         flash('article write')
         return redirect(url_for('board_view', board_name=board_name, page=1))
     context = { 'form' : form, 'site_info': site_info(), 
+                'board': board,
                 'temp_article': temp_article,
                 'site_menu': site_menu(),
                 'board_name': board_name }
@@ -656,12 +657,15 @@ def board_write(board_name, page_number=1):
 @app.route("/temp_write", methods=["POST"])
 def temp_article_write():
     form = write_article_form(request.form)
+    print form.data
+    return "a"
+    '''
+    form = write_article_form(request.form)
     creat_date = datetime.now()
     board_id = None
     remote_addr = request.remote_addr
     is_mobile = False
     # temp-save chec
-    '''
     temp_article_check = session.query(ArticleTemp).\
         filter_by(remote_addr=remote_addr).\
         filter_by(user_name="temp_article").first()
@@ -715,10 +719,10 @@ def temp_article_write():
             "is_public": is_public,
             "is_mobile": is_mobile}
             )
-        '''
 
     if request.method != "POST":
         return "Error"
+
     form = write_article_form(request.form)
     board_id = None
     creat_date = datetime.now()
@@ -760,7 +764,7 @@ def temp_article_write():
     except:
         session.rollback()
     return flash('auto save')
-
+    '''
 @app.route("/rss/article")
 def rss_view():
     last_article = session.query(Article).order_by(desc(Article.id)).first()
