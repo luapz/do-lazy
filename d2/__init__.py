@@ -220,49 +220,18 @@ class Article(Base):
 class ArticleTemp(Base):
     __tablename__ = 'article-temp'
     id = Column(Integer, primary_key=True)
-    board_id = Column(String(length=2), nullable=True)
     user_name = Column(String(length=20), nullable=True)
-    nick_name = Column(String(length=20), nullable=True)
-    password = Column(String(length=64), nullable=True)
-    title = Column(UnicodeText, nullable=True)
     text = Column(UnicodeText, nullable=True)
     creat_date = Column(DateTime, nullable=True)
-    modified_date = Column(DateTime, nullable=True)
-    is_notice = Column(Boolean, nullable=True)
-    is_public = Column(Boolean, nullable=True)
-    is_mobile = Column(Boolean, nullable=True)
-    is_anonymous = Column(Boolean, nullable=True)
     remote_addr = Column(String(length=16), nullable=True)
-    thumbs_up = Column(String(length=5), nullable=True)
-    thumbs_down = Column(String(length=5), nullable=True)
-    hits = Column(Integer, nullable=True)
 
-    def __init__(self, board_id=None, user_name=None, nick_name=None, 
-                password=None, title=None, text=None, creat_date=None, 
-                modified_date=None, is_notice=False, 
-                is_public=False, is_mobile=False, is_anonymous=False, 
-                remote_addr=None, 
-                thumbs_up=0, thumbs_down=0, hits=0):
-        self.board_id = board_id
+    def __init__(self, user_name=None, 
+                text=None, creat_date=None, 
+                remote_addr=None):
         self.user_name = user_name
-        self.nick_name = nick_name
-        self.password = password
-        self.title = title
         self.text = text
-        if creat_date is None:
-            creat_date = sql_datetime()
         self.creat_date = creat_date
-        if modified_date is None:
-            modified_date = sql_datetime()
-        self.modified_date = modified_date
-        self.is_notice = is_notice
-        self.is_public = is_public
-        self.is_mobile = is_mobile
-        self.is_anonymous = is_anonymous
         self.remote_addr = remote_addr
-        self.thumbs_up = thumbs_up
-        self.thumbs_down = thumbs_down
-        self.hits = hits
 
 class SpamFilter(Base):
     __tablename__= "filter-spam"
@@ -614,156 +583,83 @@ def board_write(board_name, page_number=1):
             user_name = Anonymous.nick_name
             nick_name = form.nick_name.data
             password = encode_sha256(encode_md5(form.password.data+user_name))
-            is_anonymous = True 
+            anonymity = True 
         else:
             user_name = current_user.user_name
             nick_name = current_user.nick_name
             password = current_user.password
-            is_anonymous = False
+            anonymity = False
         title = form.title.data
         text = form.redactor.data
+        creat_date = datetime.now()
         modified_date = datetime.now()
         is_notice = False
         is_public = True
         is_mobile = mobile_check(request)
         remote_addr = request.remote_addr
-        # temp_article update as input data 
-        session.query(ArticleTemp).filter_by(remote_addr=remote_addr).\
-        filter_by(user_name="temp_article").update(
-            {"user_name": user_name,
-            "nick_name": nick_name,
-            "password": password,
-            "title": title,
-            "text": text,
-            "modified_date": modified_date,
-            "is_notice": is_notice,
-            "is_public": is_public,
-            "is_mobile": is_mobile}
-            )
-        # read temp_article 
-        temp_article = session.query(ArticleTemp).filter_by(title=title).\
-        filter_by(nick_name=nick_name).first()
-        # commit to article table
-        session.add
+        article = Article(board_id, user_name, nick_name, password, 
+                            title, text, creat_date, modified_date, 
+                            is_notice, is_public, is_mobile, anonymity, 
+                            remote_addr)
+        session.add(article)
+        try:
+            session.commit()
+        except:
+            session.rollback()
+        # check temp-save data by ip address
+        temp_article_check = session.query(ArticleTemp).\
+            filter_by(remote_addr=remote_addr).\
+            filter_by(user_name="temp_article").first()
+        if temp_article_check is not None:
+            delete_temp_article = session.query(ArticleTemp).\
+                filter_by(remote_addr=remote_addr).\
+                filter_by(user_name="temp_article").first()
+            session.delete(delete_temp_article)
+            try:
+                session.commit()
+            except:
+                session.rollback()
+        text = None
         flash('article write')
         return redirect(url_for('board_view', board_name=board_name, page=1))
     context = { 'form' : form, 'site_info': site_info(), 
                 'board': board,
                 'temp_article': temp_article,
                 'site_menu': site_menu(),
+                'temp_article': temp_article,
                 'board_name': board_name }
     return render_template("write_article.html", **context)
 
 @app.route("/temp_write", methods=["POST"])
 def temp_article_write():
-    form = write_article_form(request.form)
-    temp_text = request.form['data']
-    '''
-    form = write_article_form(request.form)
+    user_name = "temp_article"
+    text = request.form['data']
     creat_date = datetime.now()
-    board_id = None
     remote_addr = request.remote_addr
-    is_mobile = False
-    # temp-save chec
+    # temp-save check
     temp_article_check = session.query(ArticleTemp).\
         filter_by(remote_addr=remote_addr).\
         filter_by(user_name="temp_article").first()
     # if temp-save date is not exist, make temp_article
     if temp_article_check is None:
         user_name = "temp_article"
-        nick_name = None
-        password = None
-        title = None
         text = None
-        modified_date = None
-        is_notice = False
-        is_public = False
-        is_anonymous = False
-        temp_article = ArticleTemp(board_id, user_name, nick_name, password, 
-                            title, text, creat_date, modified_date, 
-                            is_notice, is_public, is_mobile, is_anonymous, 
-                            remote_addr)
+        temp_article = ArticleTemp(user_name, text, creat_date, remote_addr)
         session.add(temp_article)
         try:
             session.commit()
         except:
             session.rollback()
-    else:
-        board_id = None
-        if current_user.nick_name == "anonymous":
-            user_name = Anonymous.nick_name
-            nick_name = None
-            password = None
-            is_anonymous = True 
-        else:
-            user_name = current_user.user_name
-            nick_name = current_user.nick_name
-            password = current_user.password
-            is_anonymous = False
-        title = form.title.data
-        text = form.redactor.data
-        modified_date = datetime.now()
-        is_notice = False
-        is_public = False
-        remote_addr = request.remote_addr
-        session.query(ArticleTemp).filter_by(remote_addr=remote_addr).\
-        filter_by(user_name="temp_article").update(
-            {"user_name": user_name,
-            "nick_name": nick_name,
-            "password": password,
-            "title": title,
-            "text": text,
-            "modified_date": modified_date,
-            "is_notice": is_notice,
-            "is_public": is_public,
-            "is_mobile": is_mobile}
-            )
+    session.query(ArticleTemp).filter_by(remote_addr=remote_addr).\
+    filter_by(user_name="temp_article").update(
+        {"user_name": user_name,
+        "text": text,
+        "creat_date": creat_date,
+        "remote_addr": remote_addr}
+        )
+    return "temp_writed"
 
-    if request.method != "POST":
-        return "Error"
 
-    form = write_article_form(request.form)
-    board_id = None
-    creat_date = datetime.now()
-    remote_addr = request.remote_addr
-    if current_user.nick_name == "anonymous":
-        user_name = Anonymous.nick_name
-        nick_name = None
-        password = None
-        is_anonymous = True 
-    else:
-        user_name = current_user.user_name
-        nick_name = current_user.nick_name
-        password = current_user.password
-        is_anonymous = False
-    title = form.title.data
-    text = form.redactor.data
-    modified_date = datetime.now()
-    is_notice = False
-    is_public = True
-    is_mobile = mobile_check(request)
-    remote_addr = request.remote_addr
-    # delete before-temp_article data
-    temp_article_delete = session.query(ArticleTemp).\
-        filter_by(remote_addr=remote_addr).first()
-    session.delete(temp_article_delete)
-    try:
-        session.commit()
-    except:
-        session.rollback()
-    
-    # temp_article commit as input data 
-    temp_article = ArticleTemp(board_id, user_name, nick_name, password, 
-                        title, text, creat_date, modified_date, 
-                        is_notice, is_public, is_mobile, is_anonymous, 
-                        remote_addr)
-    session.add(temp_article)
-    try:
-        session.commit()
-    except:
-        session.rollback()
-    return flash('auto save')
-    '''
 @app.route("/rss/article")
 def rss_view():
     last_article = session.query(Article).order_by(desc(Article.id)).first()

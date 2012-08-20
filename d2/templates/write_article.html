@@ -10,17 +10,33 @@
 {# 사용자가 비로그인일 경우, 닉네임, 암호 입력 폼을 출력 #}
 
 {% if not current_user.is_authenticated() %}
-{%from "_formhelpers.html" import render_field %}
 <form method=post action="/board/{{ board_name }}/write">
 {{ render_field(form.nick_name) }}
 {{ render_field(form.password) }}
 {{ render_field(form.title) }}
-{{ form.redactor(rows=40,cols=30) | safe }}
+{% if temp_article %}
+<textarea id="redactor">
+{{ temp_article.text | safe}}
+</textarea>
+{% else %}
+<textarea id="redactor">
+</textarea>
+{% endif %}
+
+ <input type=submit value="write" class="btn">
+</form>
 
 {% else %}
 {# 사용자가 로그인 유저일 경우 제목과 본문 입력창만 보인다 #}
 {{ render_field(form.title) }}
-{{ form.redactor(rows=40,cols=30) | safe }}
+{% if temp_article %}
+<textarea id="redactor">
+{{ temp_article.text | safe}}
+</textarea>
+{% else %}
+<textarea id="redactor">
+</textarea>
+{% endif %}
 
  <input type=submit value="write" class="btn">
 </form>
