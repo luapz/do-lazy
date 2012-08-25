@@ -15,6 +15,7 @@ from flask.ext.login import (LoginManager, current_user, login_required,
                             confirm_login, fresh_login_required)
 from flask.ext.cache import Cache
 from flask.ext.babel import Babel
+from flask_debugtoolbar import DebugToolbarExtension
 from werkzeug.contrib.cache import MemcachedCache
 import redis
 import sqlalchemy
@@ -25,7 +26,7 @@ from sqlalchemy.orm import mapper, sessionmaker, relationship, backref
 from sqlalchemy.types import DateTime, Boolean
 
 config = ConfigParser.ConfigParser()
-config.read("d2/config")
+config.read("/home/luapz/public_html/d2/d2/config")
 db_id = config.get('db', 'db_id')
 db_password = config.get('db', 'db_password')
 db_name = config.get('db', 'db_name')
@@ -39,6 +40,10 @@ max_nick_name_string = int(config.get('board', 'max_nick_name_string'))
 
 app = Flask(__name__)
 app.secret_key = app_secret_key
+app.debug = True
+
+toolbar = DebugToolbarExtension(app)
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
 babel = Babel(app)
 app.config['BABEL_DEFAULT_LOCALE'] = 'ko'
@@ -52,7 +57,8 @@ app.config['CACHE_MEMCACHED_SERVERS'] = '127.0.0.1:11211'
 
 cache = MemcachedCache(['127.0.0.1:11211'])
 
-redis = redis.StrictRedis(host='localhost', port=6379, db="oneline")
+# redis db for article hits number
+r_hits = redis.StrictRedis(host='localhost', port=6379, db="article_hits")
 
 engine = create_engine('mysql://%s:%s@localhost/%s?charset=utf8' % 
         (db_id, db_password, db_name))
@@ -318,6 +324,8 @@ def url_for_other_page(page):
     args['page'] = page
     return url_for(request.endpoint, **args)
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
+app.jinja_env.globals.update(zip=zip)
+
 
 
 class registration_form(Form):
@@ -347,7 +355,7 @@ class write_article_form(Form):
     password = PasswordField('Password', [validators.Required()])
     title = TextField('title', [validators.Length(max=200), 
                                 validators.Required()])
-    redactor = TextAreaField('Text', default="")
+    redactor = TextAreaField('Text', default=None)
 
 def board_info():
     rv = cache.get('board_info')
@@ -368,6 +376,16 @@ def site_menu():
     if rv is None:
         rv = session.query(SiteMenu).all()
         cache.set('site_menu', rv, timeout=5 * 60 * 60)
+    return rv
+
+def notice_article_list(board_id):
+    rv = cache.get('notice_article_list')
+    if rv is None:
+        rv = session.query(Article).\
+            filter(Article.board_id==board_id).\
+            filter(Article.is_notice==True).order_by(desc(Article.id)).\
+            filter(Article.is_public==True).all()
+        cache.set('notice_article_list', rv, timeout=5 * 60 * 60)
     return rv
 
 
@@ -455,16 +473,13 @@ def article_view(board_name, page, article_number):
     if article_detail is None:
         flash('Sorry. Article is not exist.')
         return redirect(url_for('board_view', board_name=board_name, page=1))
-    # article is exist. read database and print
+    # else article is exist. read database and print
     else:
         board = session.query(Board).\
             filter_by(board_id = article_detail.board_id).first()
-        article_detail.hits = article_detail.hits + 1
-        session.add(article_detail)
-        try:
-            session.commit()
-        except:
-            session.rollback()
+        # increase article view count
+        r_hits.incr(article_detail.id)
+
         page_now = page
         page = page - 1
         next_page = page + 2
@@ -484,11 +499,12 @@ def article_view(board_name, page, article_number):
             filter(Article.board_id==board.board_id).\
             order_by(desc(Article.id)).\
             filter(Article.is_public==True)[article_from:article_to]
-        # extract notice from database
-        notice_list = session.query(Article).\
-            filter(Article.board_id==board.board_id).\
-            filter(Article.is_notice==True).order_by(desc(Article.id)).\
-            filter(Article.is_public==True).all()
+        # make 'view_count_list'. use r_hits(redis)
+        view_count_list = []
+        for i in article_list:
+            view_count_list.append(r_hits.get(i.id))
+        # extract notice from cache
+        notice_list = notice_article_list(board.board_id)
         pagination = Pagination(page, per_page, lastest_article_number)
         context = { 'article_list': article_list, 'notice_list': notice_list, 
                     'site_info': site_info, 'board' : board, 
@@ -606,6 +622,8 @@ def board_write(board_name, page_number=1):
             session.commit()
         except:
             session.rollback()
+        # make article view count use redis
+        r_hits.set(article.id, 0)
         # check temp-save data by ip address
         temp_article_check = session.query(ArticleTemp).\
             filter_by(remote_addr=remote_addr).\
