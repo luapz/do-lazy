@@ -1,6 +1,6 @@
-{% extends "layout.html" %}
+{%- extends "layout.html" -%}
 
-{% block body %}
+{%- block body -%}
 
 <div id="board_header">
     <a href="/board/{{ board.board_name }}/" class="none-decoration">
@@ -8,6 +8,7 @@
         <p>{{ board.board_desc }}</p>
     </a>
 </div> <!-- div board_header end -->
+    
 
 <div id="board_list">
     <table id="article_list">
@@ -20,20 +21,25 @@
             </tr>
         </thead>
         <tbody>
-    {% for i in notice_list %}
+    {%- for i, j in zip(notice_list, notice_view_list) -%}
             <tr class="notice">
                 <td id="number">공지</td>
-                <td id="title"><a href="/board/{{ board_name }}/page/{{ page_now }}/article/{{ i.id }}"><p>{{ i.title|truncate(max_title_string, true, '..') }}</p></a></td>
-                <td id="writer">{{ i.nick_name|truncate(max_nick_name_string, true, '..') }}</td>
-                <td id="hits">{{ i.hits }}</td>
-            </tr>
-    {% endfor %}
-
-    {% for i in article_list %}
-            <tr>
-                <td id="number">{{ total_article_number }}</td>
                 <td id="title">
-                    <a href="/board/{{ board_name }}/page/{{ page_now }}/article/{{ i.id }}">
+                        <a href="{{ url_for('article_view', board_name=board.board_name, page=page_now, article_number=i.id) }}">
+                                <p>{{ i.title|truncate(max_title_string, true, '..') }}</p>
+                        </a>
+                </td>
+                <td id="writer">{{ i.nick_name|truncate(max_nick_name_string, true, '..') }}</td>
+                <td id="hits">{{ j }}</td>
+            </tr>
+    {%- endfor -%}
+    {%- for i, j in zip(article_list, view_list) -%}
+            <tr>
+                <td id="number">
+                        {{ total_article_number }}
+                </td>
+                <td id="title">
+                    <a href="{{ url_for('article_view', board_name=board.board_name, page=page_now, article_number=i.id) }}">
                         <p>{{ i.title|truncate(max_title_string, true, '..') }}</p>
                     </a>
                 </td>
@@ -41,17 +47,16 @@
                     {{ i.nick_name|truncate(max_nick_name_string, true, '..') }}
                 </td>
                 <td id="hits">
-                    {{ i.hits }}
+                    {{ j }}
                 </td>
                 {% set total_article_number = total_article_number - 1 %}
             </tr>
-    {% endfor %}
+    {%- endfor -%}
         </tbody>
     </table>
 
-
       <div class=pagination>
-      {%- for page in pagination.iter_pages() %}
+      {%- for page in pagination.iter_pages() -%}
         {% if page %}
           {% if page != pagination.page %}
             <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
@@ -67,13 +72,11 @@
       {% endif %}
       </div>
 
-
-
-
 </div> <!-- div board_list end -->
 
 <div id="button_nav">
     <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page_now) }}"><span class="btn list">list</span></a>
     <a class="none-decoration" href="{{ url_for ('board_write', board_name = board.board_name) }}"><span class="btn write">write</span></a>
 </div> <!-- div button_nav -->
+
 {% endblock %}

@@ -4,6 +4,7 @@
 import os
 import hashlib
 import ConfigParser
+import jinja2
 from math import ceil
 from datetime import datetime
 from flask import (Flask, render_template, request, flash, url_for, redirect, 
@@ -323,8 +324,9 @@ def url_for_other_page(page):
     args = request.view_args.copy()
     args['page'] = page
     return url_for(request.endpoint, **args)
+env = jinja2.Environment()
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
-app.jinja_env.globals.update(zip=zip)
+app.jinja_env.globals['zip'] = zip
 
 
 
@@ -499,14 +501,20 @@ def article_view(board_name, page, article_number):
             filter(Article.board_id==board.board_id).\
             order_by(desc(Article.id)).\
             filter(Article.is_public==True)[article_from:article_to]
-        # make 'view_count_list'. use r_hits(redis)
-        view_count_list = []
+        # make 'view_list'. use r_hits(redis)
+        view_list = []
         for i in article_list:
-            view_count_list.append(r_hits.get(i.id))
+            view_list.append(r_hits.get(i.id))
         # extract notice from cache
         notice_list = notice_article_list(board.board_id)
+        # make 'notice_view_list'. use r_hits(redis)
+        notice_view_list = []
+        for i in notice_list:
+            notice_view_list.append(r_hits.get(i.id))
+
         pagination = Pagination(page, per_page, lastest_article_number)
         context = { 'article_list': article_list, 'notice_list': notice_list, 
+                    'view_list': view_list, 'notice_view_list': notice_view_list,
                     'site_info': site_info, 'board' : board, 
                     'board_name': board_name,
                     'article_detail': article_detail,
@@ -545,13 +553,19 @@ def board_view(board_name,page):
     article_list = session.query(Article).\
         filter(Article.board_id==board.board_id).order_by(desc(Article.id)).\
         filter(Article.is_public==True)[article_from:article_to]
-    # extract notice from database
-    notice_list = session.query(Article).\
-        filter(Article.board_id==board.board_id).\
-        filter(Article.is_notice==True).order_by(desc(Article.id)).\
-        filter(Article.is_public==True).all()
+    # extract notice from cache
+    notice_list = notice_article_list(board.board_id)
+    # make 'view_list'. use r_hits(redis)
+    view_list = []
+    for i in article_list:
+        view_list.append(r_hits.get(i.id))
+    # make 'notice_view_list'. use r_hits(redis)
+    notice_view_list = []
+    for i in notice_list:
+        notice_view_list.append(r_hits.get(i.id))
     pagination = Pagination(page, per_page, lastest_article_number)
     context = { 'article_list': article_list, 'notice_list': notice_list, 
+                'view_list': view_list, 'notice_view_list': notice_view_list,
                 'site_info': site_info, 'board' : board, 
                 'board_name': board_name,
                 'max_title_string': max_title_string,

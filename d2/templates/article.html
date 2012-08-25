@@ -46,16 +46,20 @@
             </tr>
         </thead>
         <tbody>
-    {% for i in notice_list %}
+    {% for i, j in zip(notice_list, notice_view_list) %}
             <tr class="notice">
                 <td id="number">공지</td>
-                <td id="title"><a href="/board/{{ board_name }}/page/{{ page_now }}/article/{{ i.id }}"><p>{{ i.title|truncate(max_title_string, true, '..') }}</p></a></td>
+                <td id="title">
+                        <a href="{{ url_for('article_view', board_name=board.board_name, page=page_now, article_number=i.id) }}">
+                                <p>{{ i.title|truncate(max_title_string, true, '..') }}</p>
+                        </a>
+                </td>
                 <td id="writer">{{ i.nick_name|truncate(max_nick_name_string, true, '..') }}</td>
-                <td id="hits">{{ i.hits }}</td>
+                <td id="hits">{{ j }}</td>
             </tr>
     {% endfor %}
 
-    {% for i in article_list %}
+    {% for i, j in zip(article_list, view_list) %}
             <tr>
                 <td id="number">
                         {% if i.id == article_detail.id %}
@@ -65,7 +69,7 @@
                         {% endif %}
                 </td>
                 <td id="title">
-                    <a href="/board/{{ board_name }}/page/{{ page_now }}/article/{{ i.id }}">
+                    <a href="{{ url_for('article_view', board_name=board.board_name, page=page_now, article_number=i.id) }}">
                         <p>{{ i.title|truncate(max_title_string, true, '..') }}</p>
                     </a>
                 </td>
@@ -73,7 +77,7 @@
                     {{ i.nick_name|truncate(max_nick_name_string, true, '..') }}
                 </td>
                 <td id="hits">
-                    {{ i.hits }}
+                    {{ j }}
                 </td>
                 {% set total_article_number = total_article_number - 1 %}
             </tr>
