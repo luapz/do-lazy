@@ -587,7 +587,7 @@ def board_upload():
     if request.method != "POST":
         return "Error"
     file = request.files['file']
-    if file and file.filename.endswith(".jpg"):
+    if file and file.filename.endswith(".JPG"):
         secure_filename = str(int(time.time())) + ".jpg"
         file.save( os.path.join( file_upload_path , secure_filename ))
         url_path = "/" + str(os.path.basename( file_upload_path ))

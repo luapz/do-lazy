@@ -27,7 +27,7 @@
 <script type="text/javascript" src="{{ url_for('static', filename='redactor/lib/jquery-1.7.min.js') }}" ></script>
 <script type="text/javascript" src="{{ url_for('static', filename='redactor/redactor/redactor.js') }}" ></script>
 <script type="text/javascript" src="{{ url_for('static', filename='redactor/lang/ko.js') }}" ></script>
-
+<script>$("textarea#redactor").val("{{ temp_article.text | safe }}")</script>
 <script>
 $(document).ready( function() {
                         
