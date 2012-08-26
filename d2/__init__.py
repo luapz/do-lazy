@@ -43,8 +43,10 @@ app = Flask(__name__)
 app.secret_key = app_secret_key
 app.debug = True
 
+'''
 toolbar = DebugToolbarExtension(app)
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
+'''
 
 babel = Babel(app)
 app.config['BABEL_DEFAULT_LOCALE'] = 'ko'
@@ -292,21 +294,25 @@ def mobile_check(request):
     else:
         return False
 
-
 class Pagination(object):
+
     def __init__(self, page, per_page, total_count):
         self.page = page
         self.per_page = per_page
         self.total_count = total_count
+
     @property
     def pages(self):
         return int(ceil(self.total_count / float(self.per_page)))
+
     @property
     def has_prev(self):
         return self.page > 1
+
     @property
     def has_next(self):
         return self.page < self.pages
+
     def iter_pages(self, left_edge=2, left_current=2,
                    right_current=5, right_edge=2):
         last = 0
@@ -324,8 +330,8 @@ def url_for_other_page(page):
     args = request.view_args.copy()
     args['page'] = page
     return url_for(request.endpoint, **args)
-env = jinja2.Environment()
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
+env = jinja2.Environment()
 app.jinja_env.globals['zip'] = zip
 
 
@@ -471,6 +477,7 @@ def profile(user_name):
 def article_view(board_name, page, article_number):
     article_detail = session.query(Article).filter_by(id = article_number).\
         first()
+    article_hits = r_hits.get(article_detail.id)
     # if article is not exist, flash message
     if article_detail is None:
         flash('Sorry. Article is not exist.')
@@ -481,7 +488,6 @@ def article_view(board_name, page, article_number):
             filter_by(board_id = article_detail.board_id).first()
         # increase article view count
         r_hits.incr(article_detail.id)
-
         page_now = page
         page = page - 1
         next_page = page + 2
@@ -518,6 +524,7 @@ def article_view(board_name, page, article_number):
                     'site_info': site_info, 'board' : board, 
                     'board_name': board_name,
                     'article_detail': article_detail,
+                    'article_hits': article_hits,
                     'max_title_string': max_title_string,
                     'max_nick_name_string': max_nick_name_string,
                     'page' : page, 'per_page': per_page, 'page_now': page_now,
@@ -567,6 +574,7 @@ def board_view(board_name,page):
     context = { 'article_list': article_list, 'notice_list': notice_list, 
                 'view_list': view_list, 'notice_view_list': notice_view_list,
                 'site_info': site_info, 'board' : board, 
+                'article_detail': None,
                 'board_name': board_name,
                 'max_title_string': max_title_string,
                 'max_nick_name_string': max_nick_name_string,
@@ -575,7 +583,7 @@ def board_view(board_name,page):
                 'lastest_article_number': lastest_article_number,
                 'total_article_number' : total_article_number,
                 'site_info': site_info(), 'site_menu': site_menu() }
-    return render_template("board.html", **context)
+    return render_template("article.html", **context)
 
 import json
 import time

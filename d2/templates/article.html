@@ -1,72 +1,101 @@
-{% extends "layout.html" %}
+{%- extends "layout.html" %}
 
-{% block body %}
+{%- block body %}
 
 <div id="board_header">
-    <a href="/board/{{ board.board_name }}/" class="none-decoration">
+    <a href="{{ url_for('board_view', board_name=board.board_name, page=1) }}" class="none-decoration">
         <h1>{{ board.board_name }}</h1>
         <p>{{ board.board_desc }}</p>
     </a>
 </div> <!-- div board_header end -->
 
-<div id="article">
-    <div id="article_header">
-        <h1>{{ article_detail.title }}</h1>
-        <span id="nick_name">{{ article_detail.nick_name }}</span>
-        <span id="hits">조회 : {{ article_detail.hits }}</span><br />
-        <span id="creat_date">{{ article_detail.creat_date }}</span>
-    </div> <!-- article_header end -->
-    <div id="article_contents">
-        {{ article_detail.text | safe }}
-    </div> <!-- div article_contents end -->
-</div> <!-- div article end -->
-    
-<div id="button_nav">
-    <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page_now) }}"><span class="btn list">list</span></a>
-    <a class="none-decoration" href="{{ url_for ('board_write', board_name = board.board_name) }}"><span class="btn write">write</span></a>
-    {% if not current_user.is_authenticated() %}
-        {% if article_detail.user_name == "anonymous" %}
+{%- if article_detail %}
+    <div id="article">
+        <div id="article_header">
+            <h1>{{ article_detail.title }}</h1>
+            <span id="nick_name">
+                {{ article_detail.nick_name }}
+            </span>
+            <span id="hits">
+                조회 : {{ article_hits }}
+            </span>
+            <br />
+            <span id="creat_date">
+                {{ article_detail.creat_date }}
+            </span>
+        </div> <!-- article_header end -->
+        <div id="article_contents">
+            {{ article_detail.text | safe }}
+        </div> <!-- div article_contents end -->
+    </div> <!-- div article end -->
+
+    <div id="button_nav">
+        <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page_now) }}">
+            <span class="btn list">
+                list
+            </span>
+        </a>
+        <a class="none-decoration" href="{{ url_for ('board_write', board_name = board.board_name) }}"><span class="btn write">write</span></a>
+        {%- if not current_user.is_authenticated() %}
+            {%- if article_detail.user_name == "anonymous" %}
+                <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page) }}">
+                    <span class="btn edit">edit</span>
+                </a>
+            {%- endif %}
+        {%- endif %}
+        {%- if article_detail.user_name == current_user.user_name %}
             <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page) }}"><span class="btn edit">edit</span></a>
-        {% endif %}
-    {% endif %}
-    {% if article_detail.user_name == current_user.user_name %}
-        <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page) }}"><span class="btn edit">edit</span></a>
-    {% endif %}
-</div> <!-- div button_nav -->
+        {%- endif %}
+    </div> <!-- div button_nav -->
+{%- endif %} <!-- article end -->
 
 
 <div id="board_list">
     <table id="article_list">
         <thead>
             <tr>
-                <th id="number"><p>번호</p></th>
-                <th id="title"><p>제목</p></th>
-                <th id="writer"><p>글쓴이</p></th>
-                <th id="hits"><p>조회</p></th>
+                <th id="number">
+                    번호
+                </th>
+                <th id="title">
+                    제목
+                </th>
+                <th id="writer">
+                    글쓴이
+                </th>
+                <th id="hits">
+                    조회
+                </th>
             </tr>
         </thead>
         <tbody>
-    {% for i, j in zip(notice_list, notice_view_list) %}
-            <tr class="notice">
-                <td id="number">공지</td>
-                <td id="title">
+            {%- for i, j in zip(notice_list, notice_view_list) %}
+                <tr class="notice">
+                    <td id="number">
+                        공지
+                    </td>
+                    <td id="title">
                         <a href="{{ url_for('article_view', board_name=board.board_name, page=page_now, article_number=i.id) }}">
-                                <p>{{ i.title|truncate(max_title_string, true, '..') }}</p>
+                            <p>{{ i.title|truncate(max_title_string, true, '..') }}</p>
                         </a>
-                </td>
-                <td id="writer">{{ i.nick_name|truncate(max_nick_name_string, true, '..') }}</td>
-                <td id="hits">{{ j }}</td>
-            </tr>
-    {% endfor %}
+                    </td>
+                    <td id="writer">
+                        {{ i.nick_name|truncate(max_nick_name_string, true, '..') }}
+                    </td>
+                    <td id="hits">
+                        {{ j }}
+                    </td>
+                </tr>
+            {%- endfor %}
 
-    {% for i, j in zip(article_list, view_list) %}
+            {%- for i, j in zip(article_list, view_list) %}
             <tr>
                 <td id="number">
-                        {% if i.id == article_detail.id %}
-                            <span class="current_number">-</span> 
-                        {% else %}
-                            {{ total_article_number }}
-                        {% endif %}
+                    {%- if i.id == article_detail.id %}
+                        <span class="current_number">-</span> 
+                    {%- else %}
+                        {{ total_article_number }}
+                    {%- endif %}
                 </td>
                 <td id="title">
                     <a href="{{ url_for('article_view', board_name=board.board_name, page=page_now, article_number=i.id) }}">
@@ -79,38 +108,53 @@
                 <td id="hits">
                     {{ j }}
                 </td>
-                {% set total_article_number = total_article_number - 1 %}
+                {%- set total_article_number = total_article_number - 1 %}
             </tr>
-    {% endfor %}
+            {%- endfor %}
         </tbody>
     </table>
 
 
-      <div class=pagination>
-      {%- for page in pagination.iter_pages() %}
-        {% if page %}
-          {% if page != pagination.page %}
-            <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
-          {% else %}
-            <strong>{{ page }}</strong>
-          {% endif %}
-        {% else %}
-          <span class=ellipsis>…</span>
-        {% endif %}
-      {%- endfor %}
-      {% if pagination.has_next %}
-        <a href="{{ url_for('board_view', board_name=board.board_name, page=next_page) }}">Next &raquo;</a>
-      {% endif %}
-      </div>
-
-
-
-
+    <div class=pagination>
+        <span class="prev"> 
+            {%- if pagination.has_prev %}
+                <a href="{{ url_for_other_page(page_now -1) }}">
+                    &laquo; Previous
+                </a>
+            {%- endif %}
+        </span>
+        <p id="page_number_list">
+            {%- for page in pagination.iter_pages() %}
+                {%- if page %}
+                    {%- if not page == page_now %}
+                        <span class="number">
+                            <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+                        </span>
+                    {%- else %}
+                        <span class="now">
+                            <strong>{{ page }}</strong>
+                        </span>
+                    {%- endif %}
+                {%- else %}
+                    <span class="ellipsis">…</span>
+                {%- endif %}
+            {%- endfor %}
+        </p>
+        <span class="next">
+            {%- if pagination.has_next %}
+                <a href="{{ url_for_other_page(page_now + 1) }}">Next &raquo;</a>
+            {%- endif %}
+        </span>
+    </div> <!-- div paginator end -->
 </div> <!-- div board_list end -->
 
 <div id="button_nav">
-    <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page_now) }}"><span class="btn list">list</span></a>
-    <a class="none-decoration" href="{{ url_for ('board_write', board_name = board.board_name) }}"><span class="btn write">write</span></a>
+    <a class="none-decoration" href="{{ url_for ('board_view', board_name=board.board_name, page=page_now) }}">
+        <span class="btn list">list</span>
+    </a>
+    <a class="none-decoration" href="{{ url_for ('board_write', board_name = board.board_name) }}">
+        <span class="btn write">write</span>
+    </a>
 </div> <!-- div button_nav -->
 
-{% endblock %}
+{%- endblock %}

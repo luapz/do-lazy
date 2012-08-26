@@ -158,6 +158,29 @@ th#hits, td#hits {
 
 .pagination {
     margin-bottom: 15px;
+    width: 100%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.pagination * {
+    display: inline;
+}
+
+.pagination .prev {
+    float: left;
+    text-align: left;
+    width: 100px;
+}
+
+.pagination .next {
+    float: right;
+    text-align: right;
+    width: 100px;
+}
+
+.pagination p#page_number_list {
+    width: 100px;
 }
 
 div#button_nav {
