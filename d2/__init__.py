@@ -295,24 +295,19 @@ def mobile_check(request):
         return False
 
 class Pagination(object):
-
     def __init__(self, page, per_page, total_count):
         self.page = page
         self.per_page = per_page
         self.total_count = total_count
-
     @property
     def pages(self):
         return int(ceil(self.total_count / float(self.per_page)))
-
     @property
     def has_prev(self):
         return self.page > 1
-
     @property
     def has_next(self):
         return self.page < self.pages
-
     def iter_pages(self, left_edge=2, left_current=2,
                    right_current=5, right_edge=2):
         last = 0
@@ -363,7 +358,7 @@ class write_article_form(Form):
     password = PasswordField('Password', [validators.Required()])
     title = TextField('title', [validators.Length(max=200), 
                                 validators.Required()])
-    redactor = TextAreaField('Text', default=None)
+    redactor = TextAreaField('Text')
 
 def board_info():
     rv = cache.get('board_info')
@@ -644,6 +639,9 @@ def board_write(board_name, page_number=1):
             session.commit()
         except:
             session.rollback()
+        print article.nick_name
+        print article.title
+        print article.text
         # make article view count use redis
         r_hits.set(article.id, 0)
         # check temp-save data by ip address
@@ -674,6 +672,7 @@ def board_write(board_name, page_number=1):
 def temp_article_write():
     user_name = "temp_article"
     text = request.form['data']
+    print text
     creat_date = datetime.now()
     remote_addr = request.remote_addr
     # temp-save check
