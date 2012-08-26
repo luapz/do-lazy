@@ -4,3 +4,4 @@ config
 .DS_Store
 *.swm
 *.swn
+./d2/static/files/*
