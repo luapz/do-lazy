@@ -353,12 +353,10 @@ class profile_form(Form):
     user_name = TextField('id')
 
 class write_article_form(Form):
-    nick_name = TextField('nick name', [validators.Length(max=50), 
-                          validators.Required()])
+    nick_name = TextField('nick name', [validators.Required()])
     password = PasswordField('Password', [validators.Required()])
-    title = TextField('title', [validators.Length(max=200), 
-                                validators.Required()])
-    redactor = TextAreaField('Text')
+    title = TextField('title', [validators.Required()])
+    redactor = TextAreaField('Text', [validators.Required()])
 
 def board_info():
     rv = cache.get('board_info')
@@ -587,7 +585,9 @@ def board_upload():
     if request.method != "POST":
         return "Error"
     file = request.files['file']
-    if file and file.filename.endswith(".JPG"):
+    print type(file.filename)
+    file.filename
+    if file and file.filename.endswith(".jpg"):
         secure_filename = str(int(time.time())) + ".jpg"
         file.save( os.path.join( file_upload_path , secure_filename ))
         url_path = "/" + str(os.path.basename( file_upload_path ))
@@ -611,7 +611,7 @@ def board_write(board_name, page_number=1):
         filter_by(user_name="temp_article").first()
     temp_article = temp_article_check
     # input from post
-    if request.method == 'POST':
+    if request.method == 'POST' and form.validate():
         if current_user.nick_name == "anonymous":
             user_name = Anonymous.nick_name
             nick_name = form.nick_name.data

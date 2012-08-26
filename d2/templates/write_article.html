@@ -9,17 +9,21 @@
 {# 사용자가 비로그인일 경우, 닉네임, 암호 입력 폼을 출력 #}
 {% if not current_user.is_authenticated() %}
 <form method=post action="/board/{{ board_name }}/write">
+    <dl>
     {{ render_field(form.nick_name) }}
     {{ render_field(form.password) }}
     {{ render_field(form.title) }}
     {{ render_field(form.redactor) }}
+    </dl>
      <input type=submit value="write" class="btn">
 </form>
 {% else %}
     <form method=post action="/board/{{ board_name }}/write">
+    <dl>
         {# 사용자가 로그인 유저일 경우 제목과 본문 입력창만 보인다 #}
         {{ render_field(form.title) }}
         {{ render_field(form.redactor) }}
+    </dl>
          <input type=submit value="write" class="btn">
     </form>
 {% endif %}
@@ -30,7 +34,6 @@
 <script>$("textarea#redactor").val("{{ temp_article.text | safe }}")</script>
 <script>
 $(document).ready( function() {
-                        
                 var a = $('#redactor')
                 a.redactor(
                         { imageUpload: '/board/upload',
@@ -39,7 +42,7 @@ $(document).ready( function() {
                             lang: 'ko'}
                 )
         }
-)
+);
 </script>
 {% endblock %}
 
