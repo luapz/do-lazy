@@ -1,0 +1,123 @@
+{% extends "layout.html" %}
+
+{% block body %}
+{% from "_formhelpers.html" import render_field %}
+<link rel="stylesheet" href="{{ url_for('static', filename='redactor/css/style.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='redactor/redactor/redactor.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='plupload/js/jquery.plupload.queue/css/jquery.plupload.queue.css') }}" type="text/css" media="screen" />
+<script type="text/javascript" src="{{ url_for('static', filename='plupload/js/jquery.plupload.queue/jquery.plupload.queue.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='plupload/js/plupload.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='plupload/js/plupload.flash.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='plupload/js/plupload.html4.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='plupload/js/plupload.html5.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='redactor/redactor/redactor.js') }}" ></script>
+<script type="text/javascript" src="{{ url_for('static', filename='redactor/lang/ko.js') }}" ></script>
+
+{%- if board_info %}
+    <a href="{{ url_for('board_view', BOARD_NAME= board_info.name, PAGE_NUMBER=1) }}" class="none-decoration">
+    <h2>{{ board_info.name }}</h2>
+    <p>{{ board_info.slogan }}<p>
+    </a>
+{% endif %}
+
+<h1>글쓰기</h1>
+
+{# 로그인/비로그인 판단 하여 글쓰기 폼을 다르게 출력 #}
+{# 사용자가 비로그인일 경우, 닉네임, 암호 입력 폼을 출력 #}
+<form method=post action="{{ url_for('board_write', board_name=board_info.name) }}">
+    <dl>
+    {{ render_field(form.nick_name, placeholder="닉네임" ) }}
+    {{ render_field(form.password, placeholder="암호")  }}
+    {{ render_field(form.title, placeholder="제목 ") }}
+    {{ render_field(form.redactor, placeholder="foo" ) }}
+    </dl>
+    {#
+        {%- if is_mobile == 1 %}
+            <div id="html5_uploader" style="width: 450px; height: 330px;">
+                <div id="html4_uploader" style="width: 450px; height: 330px;">
+                </div>
+            </div>
+        {% else %}
+            <div id="flash_uploader" style="width: 450px; height: 330px;">
+            </div>
+        {% endif %}
+    #}
+<div id="button_nav">
+    <a href="{{ url_for('board_view', BOARD_NAME= board_info.name, PAGE_NUMBER=1) }}" class="none-decoration">
+        <span class="btn">list</span>
+    </a>
+    <input type=submit value="write" class="btn write">
+ </div> <!-- button_nav div end -->
+</form>
+
+<script type="text/javascript">
+$(document).ready( function() {
+                var a = $('#redactor')
+                a.redactor(
+                        { allowedTags: ["code", "span", "div", "label", "a", "br", "p", "b", "i", "del", "strike", "u",
+                        "img", "video", "audio", "iframe", "object", "embed", "param", "blockquote", 
+                        "mark", "cite", "small", "ul", "ol", "li", "hr", "dl", "dt", "dd", "sup", "sub", 
+                        "big", "pre", "code", "figure", "figcaption", "strong", "em", "table", "tr", "td", 
+                        "th", "tbody", "thead", "tfoot", "h1", "h2", "h3", "h4", "h5", "h6"],
+                           
+                          
+                            lang: 'ko'}
+                )
+        }
+);
+
+$(function() {
+        // Setup flash version
+        $("#flash_uploader").pluploadQueue({
+                // General settings
+                runtimes : 'flash',
+                url : '/plupload',
+                max_file_size : '10mb',
+                chunk_size : '1mb',
+                unique_names : true,
+                filters : [
+                        {title : "Image files", extensions : "jpg,gif,png,jpeg"},
+                        {title : "Zip files", extensions : "zip"},
+                        {title : "Moive", extensions : "swf,mov,avi,asf,mkv,flv"}
+                ],
+
+                // Resize images on clientside if we can
+                resize : {width : 320, height : 240, quality : 90},
+
+                // Flash settings
+                flash_swf_url : '{{ url_for ('static', filename='plupload/js/plupload.flash.swf') }}'
+        });
+
+        $("#html5_uploader").pluploadQueue({
+                // General settings
+                runtimes : 'html5',
+                url : '/plupload',
+                max_file_size : '10mb',
+                chunk_size : '1mb',
+                unique_names : true,
+                filters : [
+                        {title : "Image files", extensions : "jpg,gif,png,jpeg"},
+                        {title : "Zip files", extensions : "zip"},
+                        {title : "Moive", extensions : "swf,mov,avi,asf,mkv,flv"}
+                ],
+
+                // Resize images on clientside if we can
+                resize : {width : 320, height : 240, quality : 90}
+        });
+
+
+        // Setup html4 version
+        $("#html4_uploader").pluploadQueue({
+                // General settings
+                runtimes : 'html4',
+                url : '/plupload',
+                unique_names : true,
+                filters : [
+                        {title : "Image files", extensions : "jpg,gif,png"},
+                        {title : "Zip files", extensions : "zip"}
+                ]
+        });
+});
+</script>
+{% endblock %}
+

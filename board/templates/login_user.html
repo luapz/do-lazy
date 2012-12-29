@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block body %}
+    {% from "_macros.html" import render_field_with_errors, render_field %}
+    {% include "_messages.html" %}
+    <h1>Login</h1>
+    <form action="{{ url_for('login') }}" method="POST" name="form">
+        {{ render_field_with_errors(form.username) }}
+            {%- if error_message %}{{ error_message }}{% endif %}
+        {{ render_field_with_errors(form.password) }}
+        {{ render_field_with_errors(form.remember) }}
+        <p><input type="submit" value="login"></p>
+    </form>
+{% endblock body %}

@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block body %}
+{%- if editable %}
+    {% from "_macros.html" import render_field_with_errors, render_field %}
+    {% include "_messages.html" %}
+    <h1>회원정보 수정</h1>
+    <form action="{{ url_for('profile_edit', user_name=current_user.user_name) }}" method="POST" name="form">
+        {{ render_field_with_errors(form.nickname) }}
+        {{ render_field_with_errors(form.email) }}
+        <p><input type="submit" value="수정"></p>
+    </form>
+{% else %}
+    <dl>
+        <dt>아이디</dt>
+        <dd>{{ current_user.user_name }}</dd>
+        <dt>닉네임</dt>
+        <dd>{{ current_user.nick_name }}</dd>
+    </dl>
+{% endif %}
+{% endblock body %}

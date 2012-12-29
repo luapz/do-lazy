@@ -1,0 +1,10 @@
+[db]
+db_id = db_id_is_here
+db_password = db_password_is_here
+db_name = db_name_is_here
+
+[board]
+article_per_page = 10
+
+[app]
+password_salt = salt

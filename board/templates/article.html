@@ -1,0 +1,62 @@
+{{ PAGE_NUMBER }}
+{%- extends "layout.html" %}
+{%- block body %}
+{%- if board_info %}
+    <h3>{{board_info.name}}</h3>
+    <p>{{board_info.slogan}}</p>
+{%- endif %} {# board_info if end #}
+{%- if article_detail %}
+    <h1>{{ article_detail.title }}</h1>
+    <div id="text">
+        {{ article_detail.text|safe }}
+    </div> {# article_detail if end #}
+    <a href="{{ url_for('board_view', board=board_info.name, page=page, article=article_detail.id, act='update') }}" class="none-decoration"><span class="btn">수정</span></a>
+    <a href="{{ url_for('board_view', board=board_info.name, page=page, article=article_detail.id, act='delete') }}" class="none-decoration"><span class="btn">삭제</span></a>
+    <a href="{{ url_for('board_view', board=board_info.name, page=page) }}" class="none-decoration"><span class="btn">목록</span></a>
+{%- endif %} {# article_detail if end #}
+<div id="board_list">
+    <table id="article_list">
+        <thead>
+            <tr>
+                <th class="title">제목</th>
+                <th class="writer">닉네임</th>
+                <th class="create_date">등록일</th>
+                <th class="hits">조회</th>
+            </tr>
+        </thead>
+{%- if article_list %}
+            <tbody>
+                {%- for article in article_list %}
+                <tr>
+                    <td class="title">
+                        <a href="{{ url_for('board_view', board=board_info.name, article=article.id, page=page ) }}">{{ article.title|safe }}</a>
+                        {%- if not article.reply_number == 0 %}
+                            <span class="small gray">
+                                <a href="{{ url_for('article_view', board=board_info.name, article=article.id, page=page ) }}#reply_list">&nbsp;[{{ article.reply_number }}]</a>
+                            </span>
+                        {%- endif %}
+                        {%- if has_image %}
+                            &nbsp;<span class="has_image supersmall red"><sup>image</sup></span>
+                        {%- endif %}
+                        {%- if has_movie %}
+                            &nbsp;<span class="has_movie supersmall green"><sup>movie</sup></span>
+                        {%- endif %}
+                    </td>
+                    <td class="writer">
+                        {{ article.nick_name }}
+                    </td>
+                    <td class="create_date">
+                        <abbr class="timeago" title="">{{ article.create_at_ago }}</abbr>
+                    </td>
+                    <td class="hits">
+                        {{ article.views }}
+                    </td>
+                </tr>
+                {%- endfor %}
+            </tbody>
+
+{%- endif %} {# article_list end #}
+        </table>
+    <a href="{{ url_for('board_view', board= board_info.name, page=page) }}" class="none-decoration"><span class="btn">목록</span></a>
+    <a class="none-decoration" href="{{ url_for ('board_write', board=board_info.name) }}"><span class="btn btn-round write">쓰기</span></a>
+{%- endblock body %}
