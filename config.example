@@ -8,3 +8,4 @@ article_per_page = 10
 
 [app]
 password_salt = salt
+secret_key = key
